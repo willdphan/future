@@ -52,7 +52,7 @@ os.environ['OPENAI_API_KEY'] = 'sk-76P5wAD9bzNKWGJbWfmkT3BlbkFJ4cEniKdyg09eWlCY8
 def truncate_text(text, max_length=200):
     return text[:max_length] + "..." if len(text) > max_length else text
 
-def find_relevant_subreddits(query, subreddit_names, num_subreddits=10):
+def find_relevant_subreddits(query, subreddit_names, num_subreddits=4):
     vectorizer = TfidfVectorizer(stop_words='english')
     subreddit_descriptions = []
     
