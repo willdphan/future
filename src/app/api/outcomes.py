@@ -152,19 +152,42 @@ async def collect_reddit_content(subreddit_names, thread_limit=2, comment_limit=
     
     return documents
 
-def parse_outcomes(response_text: str) -> List[Tuple[str, str, str, float]]:
+def parse_outcomes(response_text: str) -> List[Tuple[int, str, str, float]]:
     outcomes = []
     lines = response_text.split('\n')
-    for i, line in enumerate(lines):
-        match = re.match(r'(\d+)\.\s*(.*?):\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
+    current_outcome = None
+    current_description = ""
+
+    for line in lines:
+        # Match the outcome number, title, and probability
+        match = re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
         if match:
+            if current_outcome:
+                outcomes.append((current_outcome[0], current_outcome[1], current_description.strip(), current_outcome[2]))
             option_number = int(match.group(1))
             title = match.group(2)
-            description = match.group(3)
-            probability = float(match.group(4))
-            outcomes.append((option_number, title, description, probability))
+            probability = float(match.group(3))
+            current_outcome = (option_number, title, probability)
+            current_description = ""
+        elif line.strip().startswith("Title:"):
+            # Skip the title line as we've already captured it
+            continue
+        elif line.strip().startswith("Detailed description:"):
+            # Start of the detailed description
+            current_description = line.replace("Detailed description:", "").strip()
+        elif line.strip().startswith("Probability:"):
+            # Skip the probability line as we've already captured it
+            continue
+        else:
+            # Append to the current description
+            current_description += " " + line.strip()
+
+    if current_outcome:
+        outcomes.append((current_outcome[0], current_outcome[1], current_description.strip(), current_outcome[2]))
+
     return outcomes
 
+# ... rest of the code remains the same ...
 def calculate_probabilities(outcomes: List[str], source_nodes: List) -> List[Tuple[int, str, str, float]]:
     total_score = sum(node.score for node in source_nodes)
     probabilities = []
@@ -227,19 +250,20 @@ async def generate_outcomes(query: Query):
     Settings.node_parser = node_parser
     index = VectorStoreIndex.from_documents(documents)
 
-    # Create a custom prompt
+    # Modify the custom prompt to encourage longer descriptions
     custom_prompt = PromptTemplate(
         "You are an assistant that generates possible outcomes for given actions based on relevant Reddit content.\n"
         "Context: {context_str}\n"
         "Human: Given the action: '{query_str}', list 4-5 possible outcomes. For each outcome, provide:\n"
         "1. A short title (3-5 words)\n"
-        "2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context.\n"
+        "2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.\n"
         "3. The probability of occurring (as a percentage).\n"
         "Format each outcome as follows:\n"
-        "1. Short Title: Detailed description (XX%)\n"
+        "1. Detailed description (XX%)\n"
         "The probabilities should sum up to 100%.\n"
         "Assistant: "
     )
+
     # Query the index
     query_engine = index.as_query_engine(
         similarity_top_k=5,
