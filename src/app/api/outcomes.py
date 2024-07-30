@@ -16,8 +16,8 @@ Try different RAG methods with eval.
 # os.environ['OPENAI_API_KEY'] = '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'
 
 
-import praw
 from llama_index.core import Document, VectorStoreIndex, Settings
+from pydantic import BaseModel
 from llama_index.llms.openai import OpenAI
 import logging
 import sys
@@ -30,6 +30,25 @@ from llama_index.core.node_parser import SentenceSplitter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from typing import List, Tuple
+import re
+import os
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # Adjust this to your React app's URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Set up logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -39,26 +58,29 @@ logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 download('punkt')
 download('stopwords')
 
-reddit = praw.Reddit(
+import asyncpraw
+
+# Reddit API credentials
+reddit = asyncpraw.Reddit(
     client_id="NAwLZrLY3xLaiyUt7bghPA",
     client_secret="22GEFssTVzkVGRyQYo_igSZlJkQAUg",
     user_agent="python:com.williamphan.NAwLZrLY3xLaiyUt7bghPA:v1.0 (by /u/jasonle123)"
 )
 
-import os
 # Set OpenAI API key
 os.environ['OPENAI_API_KEY'] = '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'
 
-def truncate_text(text, max_length=200):
+def truncate_text(text, max_length=500):
     return text[:max_length] + "..." if len(text) > max_length else text
 
-def find_relevant_subreddits(query, subreddit_names, num_subreddits=4):
+async def find_relevant_subreddits(query, subreddit_names, num_subreddits=4):
     vectorizer = TfidfVectorizer(stop_words='english')
     subreddit_descriptions = []
     
     for subreddit_name in subreddit_names:
         try:
-            subreddit = reddit.subreddit(subreddit_name)
+            subreddit = await reddit.subreddit(subreddit_name)
+            await subreddit.load()  # Load the subreddit data
             description = f"{subreddit.display_name} {subreddit.public_description}"
             subreddit_descriptions.append(description)
         except Exception as e:
@@ -74,7 +96,7 @@ def find_relevant_subreddits(query, subreddit_names, num_subreddits=4):
     
     return [subreddit for subreddit, _ in top_subreddits]
 
-def collect_reddit_content(subreddit_names, thread_limit=4, comment_limit=5):
+async def collect_reddit_content(subreddit_names, thread_limit=2, comment_limit=2):
     documents = []
     subreddit_count = 0
     thread_count = 0
@@ -82,16 +104,20 @@ def collect_reddit_content(subreddit_names, thread_limit=4, comment_limit=5):
     
     for subreddit_name in subreddit_names:
         try:
-            subreddit = reddit.subreddit(subreddit_name)
+            subreddit = await reddit.subreddit(subreddit_name)
+            await subreddit.load()  # Load the subreddit data
             subreddit_thread_count = 0
-            for submission in subreddit.hot(limit=thread_limit):
+            async for submission in subreddit.hot(limit=thread_limit):
+                await submission.load()  # Load the submission data
                 submission.comment_sort = 'top'
-                submission.comments.replace_more(limit=0)
-                top_comments = submission.comments.list()[:comment_limit]
+                await submission.comments.replace_more(limit=0)
+                top_comments = await submission.comments.list()
+                top_comments = top_comments[:comment_limit]
                 
                 thread_content = f"Title: {submission.title}\n\nContent: {truncate_text(submission.selftext)}\n\nComments:\n"
                 comments_data = []
                 for comment in top_comments:
+                    await comment.load()  # Load the comment data
                     truncated_comment = truncate_text(comment.body)
                     thread_content += f"[Upvotes: {comment.score}] {truncated_comment}\n\n"
                     comments_data.append({
@@ -126,13 +152,51 @@ def collect_reddit_content(subreddit_names, thread_limit=4, comment_limit=5):
     
     return documents
 
-def main():
-    # Set up LLM
-    llm = OpenAI(temperature=0, model="gpt-3.5-turbo")
+def parse_outcomes(response_text: str) -> List[Tuple[str, str, str, float]]:
+    outcomes = []
+    lines = response_text.split('\n')
+    for i, line in enumerate(lines):
+        match = re.match(r'(\d+)\.\s*(.*?):\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
+        if match:
+            option_number = int(match.group(1))
+            title = match.group(2)
+            description = match.group(3)
+            probability = float(match.group(4))
+            outcomes.append((option_number, title, description, probability))
+    return outcomes
 
-    # Get user query
-    user_query = input("Enter your search query for Reddit threads: ")
-    
+def calculate_probabilities(outcomes: List[str], source_nodes: List) -> List[Tuple[int, str, str, float]]:
+    total_score = sum(node.score for node in source_nodes)
+    probabilities = []
+    for i, outcome in enumerate(outcomes):
+        if i < len(source_nodes):
+            prob = (source_nodes[i].score / total_score) * 100
+        else:
+            prob = 100 / len(outcomes)  # Equal distribution for any extra outcomes
+        probabilities.append((i+1, f"Outcome {i+1}", outcome, round(prob, 2)))
+    return probabilities
+
+class Query(BaseModel):
+    query: str
+
+class Outcome(BaseModel):
+    option_number: int
+    title: str
+    description: str
+    probability: float
+
+class OutcomesResponse(BaseModel):
+    outcomes: List[Outcome]
+    relevant_subreddits: List[str]
+    sources: List[dict]
+
+@app.post("/generate-outcomes", response_model=OutcomesResponse)
+async def generate_outcomes(query: Query):
+        # Log the incoming query
+    print(f"Received query: {query.query}")
+    # Set up LLM
+    llm = OpenAI(temperature=0, model="gpt-3.5-turbo", max_tokens=500)  # Adjust max_tokens as needed
+
     # List of top social subreddits
     all_subreddits = [
         'AskReddit', 'relationships', 'relationship_advice', 'dating_advice',
@@ -149,15 +213,13 @@ def main():
     ]
     
     # Find relevant subreddits
-    relevant_subreddits = find_relevant_subreddits(user_query, all_subreddits, num_subreddits=10)
-    print(f"Most relevant subreddits: {', '.join(relevant_subreddits)}")
+    relevant_subreddits = await find_relevant_subreddits(query.query, all_subreddits, num_subreddits=5)
     
     # Collect Reddit content from relevant subreddits
-    documents = collect_reddit_content(relevant_subreddits)
+    documents = await collect_reddit_content(relevant_subreddits)
     
     if not documents:
-        print("No content found.")
-        return
+        raise HTTPException(status_code=404, detail="No content found.")
 
     # Create the index with a node parser
     node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
@@ -167,36 +229,66 @@ def main():
 
     # Create a custom prompt
     custom_prompt = PromptTemplate(
-        "Based on the most relevant Reddit content to this scenario: '{query_str}', "
-        "and after analyzing the most upvoted and relevant comments from the most relevant threads, "
-        "what are 4-5 possible outcomes or scenarios that could happen? Provide a brief description for each.\n"
+        "You are an assistant that generates possible outcomes for given actions based on relevant Reddit content.\n"
         "Context: {context_str}\n"
-        "Human: {query_str}\n"
+        "Human: Given the action: '{query_str}', list 4-5 possible outcomes. For each outcome, provide:\n"
+        "1. A short title (3-5 words)\n"
+        "2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context.\n"
+        "3. The probability of occurring (as a percentage).\n"
+        "Format each outcome as follows:\n"
+        "1. Short Title: Detailed description (XX%)\n"
+        "The probabilities should sum up to 100%.\n"
         "Assistant: "
     )
-
     # Query the index
     query_engine = index.as_query_engine(
         similarity_top_k=5,
         text_qa_template=custom_prompt
     )
-    response = query_engine.query(user_query)
+    response = query_engine.query(query.query)
+        # Log the response from the query
+    print(f"Query response: {response}")
 
-    print("\nPossible Outcomes:")
-    print(response)
+    # Parse outcomes and probabilities
+    outcomes_with_probs = parse_outcomes(str(response))
 
-    # Print the content of the most relevant threads and comments
-    print("\nMost Relevant Threads and Comments:")
-    for i, node in enumerate(response.source_nodes, 1):
-        print(f"\nSource {i}:")
-        print(f"Relevance Score: {node.score}")
-        print(f"Subreddit: {node.metadata['subreddit']}")
-        print(f"Thread Title: {node.metadata['thread_title']}")
-        print(f"URL: {node.metadata['url']}")
-        print(f"Thread Upvotes: {node.metadata['upvotes']}")
-        print("\nTop Comments:")
-        for j, comment in enumerate(node.metadata['comments'][:5], 1):  # Print top 5 comments
-            print(f"  {j}. [Upvotes: {comment['score']}] {comment['body']}")
+    # If parsing fails, calculate probabilities based on relevance scores
+    if not outcomes_with_probs:
+        outcomes = str(response).split('\n')
+        outcomes_with_probs = calculate_probabilities(outcomes, response.source_nodes)
+
+    # Prepare the response
+    outcomes = [Outcome(option_number=opt, title=title, description=desc, probability=prob) for opt, title, desc, prob in outcomes_with_probs]
+
+    # Log the outcomes
+    print("Generated outcomes:")
+    for outcome in outcomes:
+        print(f"Option {outcome.option_number}: {outcome.title} - {outcome.description} ({outcome.probability}%)")
+
+    sources = []
+    for node in response.source_nodes:
+        sources.append({
+            "relevance_score": node.score,
+            "subreddit": node.metadata['subreddit'],
+            "thread_title": node.metadata['thread_title'],
+            "url": node.metadata['url'],
+            "upvotes": node.metadata['upvotes'],
+            "top_comments": [{"body": comment['body'], "score": comment['score']} for comment in node.metadata['comments'][:5]]
+        })
+
+    return OutcomesResponse(
+        outcomes=outcomes,
+        relevant_subreddits=relevant_subreddits,
+        sources=sources
+    )
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    import asyncio
+    
+    async def main():
+        config = uvicorn.Config("src.app.api.outcomes:app", host="0.0.0.0", port=8000, reload=True)
+        server = uvicorn.Server(config)
+        await server.serve()
+    
+    asyncio.run(main())
