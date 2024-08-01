@@ -96,7 +96,7 @@ async def find_relevant_subreddits(query, subreddit_names, num_subreddits=4):
     
     return [subreddit for subreddit, _ in top_subreddits]
 
-async def collect_reddit_content(subreddit_names, thread_limit=2, comment_limit=2):
+async def collect_reddit_content(subreddit_names, thread_limit=1, comment_limit=2):
     documents = []
     subreddit_count = 0
     thread_count = 0
