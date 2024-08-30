@@ -47,13 +47,13 @@ export function Hero() {
 
   return (
     <div className='w-fit items-center gap-2 min-w-screen flex flex-col mt-[30px] z-[99] '>
-      <h1 className='font-man text-6xl text-black ml-10 leading-tight tracking-normal'>
+      <h1 className='font-man text-5xl sm:text-6xl text-black ml-10 leading-tight tracking-normal'>
         {/* There's a <span className="text-[#00B7FC]">{percentage}%</span> Chance <br/>It'll Play Out, <Link href="/flowchart" className="text-[#00B7FC] underline decoration-4  underline-offset-8">Prolly</Link>. */}
-        There&apos;s a <span className="text-[#00B7FC]">{percentage}%</span> Chance <br/>
-        It&apos;ll Play Out, <Link href="/signup" className="text-[#00B7FC] underline decoration-4  underline-offset-8">Prolly</Link>.
-        <br />
+        There&apos;s a <span className="text-[#00B7FC]"><br className="sm:hidden" /> {percentage}%</span> Chance <br/>
+It&apos;ll Play Out, <Link href="/signup" className="text-[#00B7FC] underline decoration-4  underline-offset-8">Prolly</Link>.
+<br />
         <div className='flex flex-col gap-1'>
-        <span className={`mt-8 text-sm font-mono uppercase w-[25em] inline-block break-words whitespace-normal overflow-wrap-normal italic transition-all duration-1000 ${isBlurred ? 'blur-sm' : 'blur-none'}`}>
+        <span className={`mt-8 text-sm font-mono uppercase w-[18em] sm:w-[25em] inline-block break-words whitespace-normal overflow-wrap-normal italic transition-all duration-1000 ${isBlurred ? 'blur-sm' : 'blur-none'}`}>
             &quot;{testimonials[currentTestimonial].quote}&quot;
           </span>
           <span className={`mt-1 text-sm font-mono uppercase w-[25em] inline-block break-words whitespace-normal overflow-wrap-normal transition-all duration-1000 ${isBlurred ? 'blur-sm' : 'blur-none'}`}>

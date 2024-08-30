@@ -32,7 +32,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang='en'>
       <body className={cn('font-sans antialiased', montserrat.variable, montserratAlternates.variable)}>
-        <div className='m-auto flex h-full max-w-[1440px] flex-col'>
+        <div className='m-auto flex h-full max-w-screen flex-col'>
           {/* <header className='flex items-center justify-between py-8 bg-[#535353]'>
             <Navigation />
           </header> */}

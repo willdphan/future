@@ -10,7 +10,7 @@ import Spline from '@splinetool/react-spline';
 
 export default function HeroSpline() {
     return (
-      <section className='min-h-screen min-w-screen h-[50em] mt-[-180px] z-[0]'>
+      <section className='min-h-screen min-w-screen w-[40em] mt-[-250px] h-[50em] sm:w-full sm:mt-[-180px] z-[0]'>
   <Spline
         scene="https://prod.spline.design/vNfSCmW8CQs2gKH4/scene.splinecode" 
       />
