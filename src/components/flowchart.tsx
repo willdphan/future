@@ -4,6 +4,7 @@ import { Router, useRouter } from 'next/router';
 import { AnimatePresence,motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
 import { Cell, Pie, PieChart, ResponsiveContainer,Tooltip } from 'recharts';
+import DOMPurify from 'dompurify';
 
 import { signOut as authSignOut } from '@/app/(auth)/auth-actions';
 import { supabaseMiddlewareClient } from '@/libs/supabase/supabase-middleware-client';
@@ -544,8 +545,15 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
 //////////////////////
 
 const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
+  // Function to sanitize and create markup
+  const createMarkup = (html: string) => {
+    return {
+      __html: DOMPurify.sanitize(html)
+    };
+  };
+
   return (
-    <div className="fixed inset-y-0 right-0 w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 ">
+    <div className="fixed inset-y-0 right-0 w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
       <div className="flex justify-between items-start px-5">
         <div className='flex flex-col'>
           <h2 className="text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>
@@ -560,7 +568,10 @@ const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
       </div>
       <div className="flex-grow mt-12 px-5 pr-28">
         <h3 className="text-lg font-ibm uppercase mb-3">WHY IS THIS?</h3>
-        <p className="text-md font-man leading-relaxed">{node.content}</p>
+        <div 
+          className="text-md font-man leading-relaxed [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800"
+          dangerouslySetInnerHTML={createMarkup(node.content)}
+        />
       </div>
     </div>
   );

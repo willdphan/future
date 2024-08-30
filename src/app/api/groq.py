@@ -226,20 +226,18 @@ def generate_outcomes(query: Query):
         # Groq prompt including EXA context
         prompt = f"""You are an assistant that generates possible outcomes for given actions.
         Given the setting and action: '{query.query}', and considering this additional context:
-        
+
         {exa_context}
-        
+
         List 4-5 possible outcomes. For each outcome, provide:
         1. A short title (3-5 words)
-        2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
+        2. A detailed description (at least 500 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
         3. The probability of occurring (as a percentage).
-        4. If relevant, include a code snippet that demonstrates a key concept related to the outcome. Format the code snippet as [CODE:language]code here[/CODE].
-        5. Reference the provided URLs where appropriate in your description using [URL:n] where n is the index of the URL (starting from 1).
+        4. Reference the provided URLs where appropriate in your description using HTML anchor tags like this: <a href="http://example.com">link text</a>. Use the actual URLs provided in the context. Must use sources to help provide possible outcomes in user's scenario in EVERY POSSIBLE OUTCOME.
 
         Format each outcome as follows:
         1. Title (XX%)
-        Detailed description...
-        [CODE:language]code snippet[/CODE] (if applicable)
+        Detailed description with hyperlinks...
 
         The probabilities should sum up to 100%.
         """
@@ -300,28 +298,22 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
     current_outcome = None
     current_description = ""
     current_code_snippets = []
+    current_hyperlinks = []
 
     for line in lines:
         title_match = re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
         code_start_match = re.match(r'\[CODE:(.*?)\]', line)
         code_end_match = re.match(r'\[/CODE\]', line)
+        hyperlink_match = re.search(r'<a href="(.*?)">(.*?)</a>', line)
         
         if title_match:
             if current_outcome:
-                # Replace [URL:n] placeholders with actual hyperlinks
-                for i, url in enumerate(hyperlinks, start=1):
-                    current_description = re.sub(
-                        r'\[URL:' + str(i) + r'\]([^\[]+)',
-                        lambda m: f'<a href="{url}" target="_blank">{m.group(1)}</a>',
-                        current_description
-                    )
-                
                 outcomes.append(Outcome(
                     option_number=current_outcome[0],
                     title=current_outcome[1],
                     description=current_description.strip(),
                     probability=current_outcome[2],
-                    hyperlinks=hyperlinks,
+                    hyperlinks=current_hyperlinks,
                     code_snippets=current_code_snippets
                 ))
             option_number = int(title_match.group(1))
@@ -330,11 +322,17 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
             current_outcome = (option_number, title, probability)
             current_description = ""
             current_code_snippets = []
+            current_hyperlinks = []
         elif code_start_match:
             language = code_start_match.group(1)
             code_content = ""
         elif code_end_match:
             current_code_snippets.append(CodeSnippet(language=language, code=code_content.strip()))
+        elif hyperlink_match:
+            url = hyperlink_match.group(1)
+            text = hyperlink_match.group(2)
+            current_hyperlinks.append({"url": url, "text": text})
+            current_description += line + "\n"
         elif current_outcome:
             if code_start_match:
                 code_content += line + "\n"
@@ -342,20 +340,12 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
                 current_description += line + "\n"
 
     if current_outcome:
-        # Replace [URL:n] placeholders with actual hyperlinks
-        for i, url in enumerate(hyperlinks, start=1):
-            current_description = re.sub(
-                r'\[URL:' + str(i) + r'\]([^\[]+)',
-                lambda m: f'<a href="{url}" target="_blank">{m.group(1)}</a>',
-                current_description
-            )
-        
         outcomes.append(Outcome(
             option_number=current_outcome[0],
             title=current_outcome[1],
             description=current_description.strip(),
             probability=current_outcome[2],
-            hyperlinks=hyperlinks,
+            hyperlinks=current_hyperlinks,
             code_snippets=current_code_snippets
         ))
 
