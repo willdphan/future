@@ -121,9 +121,10 @@
 import os
 import re
 import traceback
-from typing import List
-from fastapi import FastAPI, HTTPException
+from typing import List, Optional
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from modal import Image, Secret, web_endpoint, App
 import requests
@@ -136,16 +137,25 @@ image = (
 )
 
 # Hardcode the Groq API key (for development only)
-GROQ_API_KEY = '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'
+GROQ_API_KEY = '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'
+
+# Add EXA API key (make sure to set this in your environment or secrets)
+EXA_API_KEY = os.environ.get('EXA_API_KEY', 'af5bcded-d8cd-4f27-938e-003b8a359e08')
 
 class Query(BaseModel):
     query: str
+
+class CodeSnippet(BaseModel):
+    language: str
+    code: str
 
 class Outcome(BaseModel):
     option_number: int
     title: str
     description: str
     probability: float
+    hyperlinks: List[str] = []
+    code_snippets: List[CodeSnippet] = []
 
 class OutcomesResponse(BaseModel):
     outcomes: List[Outcome]
@@ -170,40 +180,7 @@ class Groq:
         response.raise_for_status()
         return response.json()
     
-
-def parse_outcomes(response_text: str) -> List[Outcome]:
-    outcomes = []
-    lines = response_text.split('\n')
-    current_outcome = None
-    current_description = ""
-
-    for line in lines:
-        match = re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
-        if match:
-            if current_outcome:
-                outcomes.append(Outcome(
-                    option_number=current_outcome[0],
-                    title=current_outcome[1],
-                    description=current_description.strip(),
-                    probability=current_outcome[2]
-                ))
-            option_number = int(match.group(1))
-            title = match.group(2)
-            probability = float(match.group(3))
-            current_outcome = (option_number, title, probability)
-            current_description = ""
-        else:
-            current_description += line + "\n"
-
-    if current_outcome:
-        outcomes.append(Outcome(
-            option_number=current_outcome[0],
-            title=current_outcome[1],
-            description=current_description.strip(),
-            probability=current_outcome[2]
-        ))
-
-    return outcomes
+# Remove the global exception handler
 
 @app.function(image=image)
 @web_endpoint(method="POST")
@@ -211,52 +188,178 @@ def generate_outcomes(query: Query):
     try:
         print(f"Received query: {query.query}")
         
-        # Set up Groq client with hardcoded API key
-        client = Groq(api_key=GROQ_API_KEY)
+        # EXA API call
+        exa_url = "https://api.exa.ai/search"
+        exa_headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {EXA_API_KEY}"
+        }
+        exa_payload = {
+            "query": query.query,
+            "num_results": 5,
+            "use_autoprompt": True
+        }
+
+        try:
+            exa_response = requests.post(exa_url, json=exa_payload, headers=exa_headers)
+            exa_response.raise_for_status()
+            exa_data = exa_response.json()
+            print(f"EXA response: {exa_data}")
+        except requests.RequestException as e:
+            print(f"EXA API error: {str(e)}")
+            exa_data = {"results": []}
+
+        # Process EXA results
+        exa_context = ""
+        hyperlinks = []
+        if 'results' in exa_data and isinstance(exa_data['results'], list):
+            for result in exa_data['results']:
+                exa_context += f"\nTitle: {result.get('title', '')}\nSnippet: {result.get('snippet', '')}\nURL: {result.get('url', '')}\n"
+                hyperlinks.append(result.get('url', ''))
         
+        print(f"Processed EXA context: {exa_context}")
+        print(f"Hyperlinks: {hyperlinks}")
 
+        # Set up Groq client
+        client = Groq(api_key=GROQ_API_KEY)
+
+        # Groq prompt including EXA context
         prompt = f"""You are an assistant that generates possible outcomes for given actions.
-    Given the setting and action: '{query.query}', list all possible outcomes. For each outcome, provide:
-    1. A short title (3-5 words)
-    2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
-    3. The probability of occurring (as a percentage).
+        Given the setting and action: '{query.query}', and considering this additional context:
+        
+        {exa_context}
+        
+        List 4-5 possible outcomes. For each outcome, provide:
+        1. A short title (3-5 words)
+        2. A detailed description (at least 200 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
+        3. The probability of occurring (as a percentage).
+        4. If relevant, include a code snippet that demonstrates a key concept related to the outcome. Format the code snippet as [CODE:language]code here[/CODE].
+        5. Reference the provided URLs where appropriate in your description using [URL:n] where n is the index of the URL (starting from 1).
 
-    Format each outcome as follows:
-    1. Title (XX%)
-    Detailed description...
+        Format each outcome as follows:
+        1. Title (XX%)
+        Detailed description...
+        [CODE:language]code snippet[/CODE] (if applicable)
 
-    The probabilities should sum up to 100%.
-    """
+        The probabilities should sum up to 100%.
+        """
 
-        chat_completion = client.chat_completions_create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            model="mixtral-8x7b-32768",
-            temperature=0.7,
-            max_tokens=2000,
-        )
+        try:
+            chat_completion = client.chat_completions_create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model="mixtral-8x7b-32768",
+                temperature=0.7,
+                max_tokens=4000,
+            )
+            groq_response = chat_completion['choices'][0]['message']['content']
+            print(f"Groq response: {groq_response}")
+        except Exception as e:
+            error_msg = f"Error calling Groq API: {str(e)}"
+            print(error_msg)
+            return JSONResponse(status_code=500, content={"detail": error_msg})
 
-        response = chat_completion['choices'][0]['message']['content']
-        print(f"Groq response: {response}")
+        if not groq_response or len(groq_response.strip()) < 10:
+            error_msg = "Failed to generate meaningful outcomes"
+            print(error_msg)
+            return JSONResponse(status_code=500, content={"detail": error_msg})
 
-        outcomes = parse_outcomes(response)
+        try:
+            outcomes = parse_outcomes_with_code_and_links(groq_response, hyperlinks)
+        except Exception as e:
+            error_msg = f"Error parsing outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
+            print(error_msg)
+            return JSONResponse(status_code=500, content={"detail": error_msg})
 
         if not outcomes:
-            raise HTTPException(status_code=500, detail="Failed to generate outcomes.")
+            error_msg = "No outcomes were generated"
+            print(error_msg)
+            return JSONResponse(status_code=500, content={"detail": error_msg})
 
         print("Generated outcomes:")
         for outcome in outcomes:
             print(f"Option {outcome.option_number}: {outcome.title} - {outcome.description} ({outcome.probability}%)")
+            print(f"Hyperlinks: {outcome.hyperlinks}")
+            for snippet in outcome.code_snippets:
+                print(f"Code snippet ({snippet.language}):\n{snippet.code}")
 
         return OutcomesResponse(outcomes=outcomes)
+
     except Exception as e:
-        print(f"Error in generate_outcomes: {str(e)}")
-        print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        error_msg = f"Unexpected error in generate_outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(error_msg)
+        return JSONResponse(status_code=500, content={"detail": error_msg})
+
+def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
+    outcomes = []
+    lines = response_text.split('\n')
+    current_outcome = None
+    current_description = ""
+    current_code_snippets = []
+
+    for line in lines:
+        title_match = re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
+        code_start_match = re.match(r'\[CODE:(.*?)\]', line)
+        code_end_match = re.match(r'\[/CODE\]', line)
+        
+        if title_match:
+            if current_outcome:
+                # Replace [URL:n] placeholders with actual hyperlinks
+                for i, url in enumerate(hyperlinks, start=1):
+                    current_description = re.sub(
+                        r'\[URL:' + str(i) + r'\]([^\[]+)',
+                        lambda m: f'<a href="{url}" target="_blank">{m.group(1)}</a>',
+                        current_description
+                    )
+                
+                outcomes.append(Outcome(
+                    option_number=current_outcome[0],
+                    title=current_outcome[1],
+                    description=current_description.strip(),
+                    probability=current_outcome[2],
+                    hyperlinks=hyperlinks,
+                    code_snippets=current_code_snippets
+                ))
+            option_number = int(title_match.group(1))
+            title = title_match.group(2)
+            probability = float(title_match.group(3))
+            current_outcome = (option_number, title, probability)
+            current_description = ""
+            current_code_snippets = []
+        elif code_start_match:
+            language = code_start_match.group(1)
+            code_content = ""
+        elif code_end_match:
+            current_code_snippets.append(CodeSnippet(language=language, code=code_content.strip()))
+        elif current_outcome:
+            if code_start_match:
+                code_content += line + "\n"
+            else:
+                current_description += line + "\n"
+
+    if current_outcome:
+        # Replace [URL:n] placeholders with actual hyperlinks
+        for i, url in enumerate(hyperlinks, start=1):
+            current_description = re.sub(
+                r'\[URL:' + str(i) + r'\]([^\[]+)',
+                lambda m: f'<a href="{url}" target="_blank">{m.group(1)}</a>',
+                current_description
+            )
+        
+        outcomes.append(Outcome(
+            option_number=current_outcome[0],
+            title=current_outcome[1],
+            description=current_description.strip(),
+            probability=current_outcome[2],
+            hyperlinks=hyperlinks,
+            code_snippets=current_code_snippets
+        ))
+
+    return outcomes
 
 @app.function(image=image)
 @web_endpoint()
