@@ -387,9 +387,16 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
     setShowChart(true);
   };
 
+  const scrollToFlowchart = () => {
+    window.scrollTo({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    });
+  };
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden max-w-screen">
-      <div className={`${chartFullyRendered ? 'w-2/6' : 'w-full'} h-full flex flex-col z-[99] ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
+    <div className="md:flex md:h-screen w-screen overflow-y-auto md:overflow-hidden max-w-screen">
+      <div className={`h-screen w-full md:w-2/6 flex flex-col z-20 ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <AnimatePresence mode="wait">
             {!isGenerating && !outcomesReady ? (
@@ -472,7 +479,18 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
                     </span>
                   </div>
                   <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">Possible outcomes generated</h2>
-                  <p className='font-man text-gray-500'>Interact with the flowchart.</p>
+                  <p className='font-man text-gray-500 mb-4'>Interact with the flowchart.</p>
+                  <div className="flex justify-center md:hidden">
+                    <button
+                      onClick={scrollToFlowchart}
+                      className="w-8 h-8 bg-[#3C3C3C] text-white flex items-center justify-center hover:bg-[#4C4C4C] transition-colors duration-200"
+                      aria-label="Scroll to flowchart"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </button>
+                  </div>
                 </motion.div>
               )}
           
@@ -521,24 +539,24 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
             </button>
           </div>
         )}
-        </div>
-        {showChart && (
-    <div className={`${chartFullyRendered ? 'w-4/6' : 'w-0'} h-full transition-all duration-500`}>
-      <FlowChart 
-        initialSituation={answers[0]} 
-        initialAction={answers[1]} 
-        showChart={showChart}
-        onChartRendered={handleChartRendered}
-        updateNumberOfOutcomes={updateNumberOfOutcomes}
-        user={user}
-        updateTreeData={updateTreeData}
-        selectedFlowchart={selectedFlowchart} // Pass the selected flowchart data
-      />
-    </div>
-  )}
       </div>
-    );
-  };
+      {showChart && (
+        <div className="h-screen w-full md:w-4/6 transition-all duration-500 relative">
+          <FlowChart 
+            initialSituation={answers[0]} 
+            initialAction={answers[1]} 
+            showChart={showChart}
+            onChartRendered={handleChartRendered}
+            updateNumberOfOutcomes={updateNumberOfOutcomes}
+            user={user}
+            updateTreeData={updateTreeData}
+            selectedFlowchart={selectedFlowchart}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 //////////////////////
 // FULL SCREEN POPUP //
@@ -1066,11 +1084,11 @@ const FlowChart: React.FC<FlowChartProps> = ({
   };
   
   return (
-    <div className="h-full w-full relative bg-[#E8E4DB] overflow-auto"> {/* Ensure overflow-auto is set */}
+    <div className="h-full w-full relative bg-[#E8E4DB] overflow-auto">
       <div 
         ref={containerRef}
         style={containerStyle}
-        className="relative" // Ensure relative positioning
+        className="relative min-h-full"
         key={JSON.stringify(treeData)}
       >
         {renderNode(treeData)}
