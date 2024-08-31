@@ -128,6 +128,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from modal import Image, Secret, web_endpoint, App
 import requests
+from typing import List, Optional, Dict  # Add Dict here
 
 app = App("fastapi-groq-api")
 
@@ -154,7 +155,7 @@ class Outcome(BaseModel):
     title: str
     description: str
     probability: float
-    hyperlinks: List[str] = []
+    hyperlinks: List[Dict[str, str]] = []  # Change this line
     code_snippets: List[CodeSnippet] = []
 
 class OutcomesResponse(BaseModel):
