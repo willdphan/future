@@ -345,7 +345,6 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
       console.log(`Finishing outcome generation... (Call ID: ${callId})`);
       setIsGenerating(false);
       isGeneratingRef.current = false;
-      setShowSpline(false);
     }
   }, [answers]);
 
@@ -396,9 +395,9 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden max-w-screen">
+    <div className="md:flex md:h-screen w-screen overflow-y-auto md:overflow-hidden max-w-screen">
       <div className={`h-screen w-full md:w-2/6 flex flex-col z-20 ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 w-full">
           <AnimatePresence mode="wait">
             {!isGenerating && !outcomesReady ? (
               <motion.div
@@ -407,11 +406,11 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-sm"
+                className="w-full"
               >
                 
-                <h2 className="text-lg mb-4 text-center uppercase font-mono">{questions[step]}</h2>
-                <form onSubmit={handleInputSubmit}>
+                <h2 className="text-lg mb-4 text-center uppercase font-mono w-screen md:w-full px-4">{questions[step]}</h2>
+                <form onSubmit={handleInputSubmit} className="w-screen md:w-full px-4">
                   <input
                     type="text"
                     value={answers[step]}
@@ -473,14 +472,14 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
                   exit={{ opacity: 0 }}
                   className="text-center w-full"
                 >
-                  <div className="mb-4 md:mb-6 lg:mb-8">
-                    <span className="text-4xl md:text-5xl lg:text-6xl font-bold font-ibm text-[#3C3C3C]">
+                  <div className="mb-4">
+                    <span className="text-6xl font-bold font-ibm text-[#3C3C3C]">
                       <Counter value={numberOfOutcomes} />
                       {`${numberOfOutcomes}`}
                     </span>
                   </div>
-                  <h2 className="text-base md:text-lg lg:text-xl mb-2 md:mb-3 lg:mb-4 font-ibm uppercase text-[#3C3C3C]">Possible outcomes generated</h2>
-                  <p className='font-man text-sm md:text-base lg:text-lg text-gray-500 mb-4 md:mb-6 lg:mb-8'>Interact with the flowchart.</p>
+                  <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">Possible outcomes generated</h2>
+                  <p className='font-man text-gray-500 mb-4'>Interact with the flowchart.</p>
                   <div className="flex justify-center md:hidden">
                     <button
                       onClick={scrollToFlowchart}
@@ -513,29 +512,29 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
         </div>
         
         {chartFullyRendered && (
-          <div className="w-full px-4 py-4 bg-white">
-            <div className="flex flex-wrap justify-between items-center gap-2 font-man">
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center md:justify-start md:left-4 font-man">
+            <div className="flex space-x-2 overflow-x-auto pb-2 max-w-full">
               <button
                 onClick={() => setActiveView('profile')}
-                className={`px-4 py-1 ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
+                className={`px-4 py-1 whitespace-nowrap ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
                 Profile
               </button>
               <button
                 onClick={() => setActiveView('outcomes')}
-                className={`px-4 py-1 ${activeView === 'outcomes' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
+                className={`px-4 py-1 whitespace-nowrap ${activeView === 'outcomes' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
                Graph
               </button>
               <button
                 onClick={() => setActiveView('history')}
-                className={`px-4 py-1 ${activeView === 'history' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
+                className={`px-4 py-1 whitespace-nowrap ${activeView === 'history' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
                 History
               </button>
               <button
                 onClick={saveFlowchart}
-                className="px-4 py-1 bg-[#00B9F9] text-black rounded-md border border-[1px] border-black"
+                className="px-4 py-1 whitespace-nowrap bg-[#00B9F9] text-black rounded-md border border-[1px] border-black"
               >
                 Save
               </button>
@@ -561,7 +560,7 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
   );
 };
 
-//////////////////////
+////////////////////////
 // FULL SCREEN POPUP //
 //////////////////////
 
@@ -574,7 +573,7 @@ const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full lg:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
+    <div className="fixed inset-y-0 right-0 w-full md:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
       <div className="flex justify-between items-start px-5">
         <div className='flex flex-col'>
           <h2 className="text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>

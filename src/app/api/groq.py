@@ -155,7 +155,7 @@ class Outcome(BaseModel):
     title: str
     description: str
     probability: float
-    hyperlinks: List[Dict[str, str]] = []  # Change this line
+    hyperlinks: List[Dict[str, str]] = []  
     code_snippets: List[CodeSnippet] = []
 
 class OutcomesResponse(BaseModel):
