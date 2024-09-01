@@ -87,7 +87,7 @@ export function AuthUI({
   }
   return (
     <div className="font-[sans-serif] flex h-screen w-full">
-    <div className="w-1/2 bg-[#E8E4DB] flex items-center justify-center p-4">
+    <div className="hidden lg:flex w-1/2 bg-[#E8E4DB] items-center justify-center p-4">
       <div className="w-full max-w-[400px] aspect-square">
         <Spline
           scene="https://prod.spline.design/gbG6-0xtiOTPHBfn/scene.splinecode"
@@ -95,18 +95,14 @@ export function AuthUI({
       </div>
     </div>
 
-      <div className="w-1/2 p-8 overflow-auto flex items-center justify-center">
-        <form onSubmit={handleEmailSubmit} className="max-w-md mx-auto">
-          <div className="mb-6">
-            <h3 className="text-gray-800 text-3xl font-extrabold font-man ">Sign In</h3>
-            <p className='text-md mt-4 text-gray-800 font-man'>
-              Login with your email.
-  {/* Don&apos;t have an account?
-  <Link href='/signup' className='text-[#0097FC] font-medium hover:underline ml-1 whitespace-nowrap'>
-    Register here.
-  </Link> */}
-</p>
-          </div>
+    <div className="w-full lg:w-1/2 p-8 overflow-auto flex items-center justify-center bg-[#E8E4DB] bg-white">
+      <form onSubmit={handleEmailSubmit} className="max-w-md w-full">
+        <div className="mb-6">
+          <h3 className="text-gray-800 text-3xl font-extrabold font-man ">Sign In</h3>
+          <p className='text-md mt-4 text-gray-800 font-man'>
+            Login with your email.
+          </p>
+        </div>
 
           <div className="mb-4">
             <label className="text-black text-sm mb-2 block font-man">Email</label>
