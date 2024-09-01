@@ -98,9 +98,9 @@ export function AuthUI({
     <div className="w-full lg:w-1/2 p-8 overflow-auto flex items-center justify-center bg-[#E8E4DB] bg-white">
       <form onSubmit={handleEmailSubmit} className="max-w-md w-full">
         <div className="mb-6">
-          <h3 className="text-gray-800 text-3xl font-extrabold font-man ">Sign In</h3>
+          <h3 className="text-gray-800 text-3xl font-extrabold font-man ">Sign Up</h3>
           <p className='text-md mt-4 text-gray-800 font-man'>
-            Login with your email.
+            Or login with your email.
           </p>
         </div>
 
