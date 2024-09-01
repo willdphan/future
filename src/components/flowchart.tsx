@@ -1,10 +1,10 @@
 'use client';
 import React, { useCallback, useEffect, useMemo,useRef, useState } from 'react';
 import { Router, useRouter } from 'next/router';
+import DOMPurify from 'dompurify';
 import { AnimatePresence,motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
 import { Cell, Pie, PieChart, ResponsiveContainer,Tooltip } from 'recharts';
-import DOMPurify from 'dompurify';
 
 import { signOut as authSignOut } from '@/app/(auth)/auth-actions';
 import { supabaseMiddlewareClient } from '@/libs/supabase/supabase-middleware-client';

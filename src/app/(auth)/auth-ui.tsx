@@ -88,9 +88,9 @@ export function AuthUI({
   return (
     <div className="font-[sans-serif] flex h-screen w-full">
     <div className="hidden lg:flex w-1/2 bg-[#E8E4DB] items-center justify-center p-4">
-      <div className="w-full max-w-[400px] aspect-square">
+      <div className="w-full max-w-[800px] aspect-square">
         <Spline
-          scene="https://prod.spline.design/gbG6-0xtiOTPHBfn/scene.splinecode"
+         scene="https://prod.spline.design/zLtKyCfRf2bEYScH/scene.splinecode" 
         />
       </div>
     </div>
