@@ -571,7 +571,7 @@ const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
+    <div className="fixed inset-y-0 right-0 md:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
       <div className="flex justify-between items-start px-5">
         <div className='flex flex-col'>
           <h2 className="text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>

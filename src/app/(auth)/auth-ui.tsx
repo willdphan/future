@@ -14,21 +14,18 @@ import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
+// Component
+  export function AuthUI({
+    // props
+    mode,
+    signInWithOAuth,
+    signInWithEmail,
+  }: {
+    mode: 'login' | 'signup';
+    signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>; // returns type ActionResponse
+    signInWithEmail: (email: string, password: string) => Promise<ActionResponse>; // returns type ActionResponse
+  }) {
 
-const titleMap = {
-  login: 'Login to UPDATE_THIS_WITH_YOUR_APP_DISPLAY_NAME',
-  signup: 'Join UPDATE_THIS_WITH_YOUR_APP_DISPLAY_NAME and start generating banners for free',
-} as const;
-
-export function AuthUI({
-  mode,
-  signInWithOAuth,
-  signInWithEmail,
-}: {
-  mode: 'login' | 'signup';
-  signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
-  signInWithEmail: (email: string, password: string) => Promise<ActionResponse>;
-}) {
 
   const router = useRouter();
 
@@ -70,9 +67,6 @@ export function AuthUI({
           },
         },
       });
-  
-      if (error) throw error;
-  
       // The user will be redirected to the provider's login page,
       // so we don't need to handle success here.
     } catch (error) {
@@ -85,6 +79,7 @@ export function AuthUI({
       setPending(false);
     }
   }
+
   return (
     <div className="font-[sans-serif] flex h-screen w-full">
     <div className="hidden lg:flex w-1/2 bg-[#E8E4DB] items-center justify-center p-4">
