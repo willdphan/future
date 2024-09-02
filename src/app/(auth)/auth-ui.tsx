@@ -181,11 +181,11 @@ export function AuthUI({
           {mode === 'signup' && (
             <p className="text-sm text-gray-600 mt-4">
               By clicking continue, you agree to our{' '}
-              <Link href="/terms" className="text-[#0097FC] hover:underline">
+              <Link href="https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg" className="text-[#0097FC] hover:underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-[#0097FC] hover:underline">
+              <Link href="https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg" className="text-[#0097FC] hover:underline">
                 Privacy Policy
               </Link>
               .
