@@ -536,14 +536,28 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
               Profile
             </button>
           
-            <button
-              onClick={handleRefresh}
-              className="px-4 py-0 mr-2 bg-white text-[#3C3C3C] border border-[#3C3C3C] flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
+            <div className="fixed bottom-4 right-4 flex space-x-2 z-10">
+              <button
+                onClick={() => handleZoom('in')}
+                className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+              >
+                +
+              </button>
+              <button
+                onClick={() => handleZoom('out')}
+                className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+              >
+                -
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="bg-white text-black px-2 py-0 hover:bg-gray-100 border border-[1px] border-black flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
             <button
               onClick={saveFlowchart}
               className="px-4 py-0 bg-[#00B9F9] text-black rounded-md border broder-[1px] border-black"
@@ -576,15 +590,10 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
 //////////////////////
 
 const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
-  // Function to sanitize and create markup
-  const createMarkup = (html: string) => {
-    return {
-      __html: DOMPurify.sanitize(html)
-    };
-  };
+  const createMarkup = (html: string) => ({ __html: DOMPurify.sanitize(html) });
 
   return (
-    <div className="fixed inset-0 md:inset-y-0 md:right-0 md:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-4 md:p-12 overflow-y-auto">
+    <div className="fixed top-0 left-0 w-full h-full md:w-4/6 md:left-auto md:right-0 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-4 md:p-12 overflow-y-auto">
       <div className="flex justify-between items-start px-2 md:px-5">
         <div className='flex flex-col'>
           <h2 className="text-xl md:text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>
@@ -1112,21 +1121,6 @@ const FlowChart: React.FC<FlowChartProps> = ({
           onClose={() => setPopupNode(null)}
         />
       )}
-      <div className="fixed bottom-4 right-4 flex space-x-2 z-10">
-        
-        <button
-          onClick={() => handleZoom('in')}
-            className="bg-white text-black px-3 py-0  hover:bg-gray-100 border border-[1px] border-black "
-          >
-          +
-        </button>
-        <button
-          onClick={() => handleZoom('out')}
-          className="bg-white text-black px-3 py-0  hover:bg-gray-100 border border-[1px] border-black "
-        >
-          -
-        </button>
-      </div>
     </div>
   );
 };
