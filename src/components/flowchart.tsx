@@ -80,6 +80,8 @@ import { signOut } from '@/app/(auth)/auth-actions';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
+
+
 function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -204,7 +206,37 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
   const isGeneratingRef = useRef(false);
   const abortControllerRef = useRef(new AbortController());
   const [treeData, setTreeData] = useState<TreeNode>(initialTree); // Add this line
+  const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  const handleZoom = useCallback((direction: 'in' | 'out') => {
+    console.log('handleZoom called with direction:', direction);
+    setZoom(prevZoom => {
+      let newZoom = direction === 'in' ? prevZoom * 1.2 : prevZoom / 1.2;
+      console.log('New zoom calculated:', newZoom);
+      
+      // Ensure we don't zoom out beyond fitting the entire graph
+      if (containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const parentRect = containerRef.current.parentElement?.getBoundingClientRect();
+        
+        if (parentRect) {
+          const minZoom = Math.min(
+            parentRect.width / containerRect.width,
+            parentRect.height / containerRect.height
+          );
+          newZoom = Math.max(newZoom, minZoom);
+        }
+      }
+      
+      console.log('Final zoom value:', newZoom);
+      return newZoom;
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log('Zoom state updated:', zoom);
+  }, [zoom]);
 
   const [selectedFlowchart, setSelectedFlowchart] = useState<TreeNode | null>(null);
 
@@ -585,6 +617,7 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
               user={user}
               updateTreeData={updateTreeData}
               selectedFlowchart={selectedFlowchart}
+              zoom={zoom}
             />
           </div>
         )}
@@ -638,6 +671,7 @@ const FlowChart: React.FC<FlowChartProps> = ({
   updateNumberOfOutcomes,
   updateTreeData,
   selectedFlowchart, // Add this prop
+  zoom, // Add this prop
 }) => {
 
   useEffect(() => {
@@ -652,8 +686,8 @@ const FlowChart: React.FC<FlowChartProps> = ({
     }
   }, [showChart, initialSituation, initialAction, onChartRendered, selectedFlowchart]);
 
-  const [zoom, setZoom] = useState(1);
   
+
   const [treeData, setTreeData] = useState<TreeNode>({
     id: 'start',
     content: '',
@@ -676,28 +710,6 @@ const FlowChart: React.FC<FlowChartProps> = ({
   const INITIAL_HORIZONTAL_SPACING = 300;
   const HORIZONTAL_SPACING = 550;
   const VERTICAL_SPACING = 150;
-
-  const handleZoom = useCallback((direction: 'in' | 'out') => {
-    setZoom(prevZoom => {
-      let newZoom = direction === 'in' ? prevZoom * 1.2 : prevZoom / 1.2;
-      
-      // Ensure we don't zoom out beyond fitting the entire graph
-      if (containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const parentRect = containerRef.current.parentElement?.getBoundingClientRect();
-        
-        if (parentRect) {
-          const minZoom = Math.min(
-            parentRect.width / containerRect.width,
-            parentRect.height / containerRect.height
-          );
-          newZoom = Math.max(newZoom, minZoom);
-        }
-      }
-      
-      return newZoom;
-    });
-  }, []);
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
 
