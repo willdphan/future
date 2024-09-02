@@ -606,7 +606,7 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
                 </button>
                 <button
                   onClick={handleScrollUp}
-                  className="bg-white text-black px-2 py-0 hover:bg-gray-100 border border-[1px] border-black flex items-center justify-center"
+                  className="bg-white text-black md:hidden px-2 py-0 hover:bg-gray-100 border border-[1px] border-black flex items-center justify-center"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
