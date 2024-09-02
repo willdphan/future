@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 import { Container } from '@/components/container';
 import FlowchartPage from '@/components/flowchart';
@@ -14,14 +13,17 @@ import { PricingSection } from '@/features/pricing/components/pricing-section';
 import styles from '@/styles/HomePage.module.css';
 
 export default function HomePage() {
-  useEffect(() => {
-    document.body.style.height = '100%';
-    document.body.style.overflow = 'hidden';
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const supabase = createClientComponentClient();
 
-    return () => {
-      document.body.style.height = '';
-      document.body.style.overflow = '';
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      console.log('Auth status:', !!session);
     };
+
+    checkAuth();
   }, []);
 
   return (

@@ -14,6 +14,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 import Counter from './Counter';
 import History from './history';
+import LoadingPage from './loading';
 
 
 ////////////////
@@ -276,12 +277,16 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
     setAnswers(newAnswers);
   };
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleInputSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < questions.length - 1) {
       setStep(step + 1);
     } else if (!isGeneratingRef.current) {
+      setIsLoading(true);
       await debouncedProgressStep();
+      setIsLoading(false);
     }
   };
 
@@ -399,189 +404,192 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
   };
 
   return (
-    <div className={`md:flex md:h-screen w-screen overflow-y-auto md:overflow-hidden max-w-screen ${chartFullyRendered ? 'md:flex' : 'block'}`}>
-      <div className={`h-screen ${chartFullyRendered ? 'w-full md:w-2/6' : 'w-full'} flex flex-col z-20 ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <AnimatePresence mode="wait">
-            {!isGenerating && !outcomesReady ? (
-              <motion.div
-                key={step}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-sm"
-              >
-                
-                <h2 className="text-lg mb-4 text-center uppercase font-mono">{questions[step]}</h2>
-                <form onSubmit={handleInputSubmit}>
-                  <input
-                    type="text"
-                    value={answers[step]}
-                    onChange={handleInputChange}
-                    className="w-full mb-4 text-center placeholder-center focus:outline-none focus:ring-0 font-man bg-transparent"
-                    placeholder="Enter your answer"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSkippedQuestions}
-                    className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex items-center justify-center px-4 py-2 bg-[#3C3C3C] text-black font-man bg-[#E8E4DB] border border-[1px] border-black hover:bg-[#3C3C3C] hover:text-white"
-                  >
-                    Skip Questions
-                  </button>
-                </form>
-              </motion.div>
-            ) : showSpline ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-center w-full h-full bg-[#E8E4DB] flex items-center justify-center"
-              >
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1 }}
-                  className="flex items-center justify-center"
-                >
-                  <Spline
-                    scene="https://prod.spline.design/gbG6-0xtiOTPHBfn/scene.splinecode" 
-                  />
-                </motion.div>
-              </motion.div>
-          ) : chartFullyRendered ? (
+    <>
+      {isLoading && <LoadingPage />}
+      <div className={`md:flex md:h-screen w-screen overflow-y-auto md:overflow-hidden max-w-screen ${chartFullyRendered ? 'md:flex' : 'block'}`}>
+        <div className={`h-screen ${chartFullyRendered ? 'w-full md:w-2/6' : 'w-full'} flex flex-col z-20 ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
+          <div className="flex-1 flex flex-col items-center justify-center p-4">
             <AnimatePresence mode="wait">
-              {activeView === 'profile' && (
+              {!isGenerating && !outcomesReady ? (
                 <motion.div
-                  key="profile"
+                  key={step}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center w-full"
+                  transition={{ duration: 0.5 }}
+                  className="w-full max-w-sm"
                 >
-                  <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">PROFILE</h2>
-                  <h2 className="text-lg mb-2 font-man text-gray-500">{user.email}</h2>
-                  <LogoutButton/>
-                </motion.div>
-              )}
-          
-              {activeView === 'outcomes' && (
-                <motion.div
-                  key="outcomes"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center w-full"
-                >
-                  <div className="mb-4">
-                    <span className="text-6xl font-bold font-ibm text-[#3C3C3C]">
-                      <Counter value={numberOfOutcomes} />
-                      {`${numberOfOutcomes}`}
-                    </span>
-                  </div>
-                  <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">Possible outcomes generated</h2>
-                  <p className='font-man text-gray-500 mb-4'>Interact with the flowchart.</p>
-                  <div className="flex justify-center md:hidden">
+                  
+                  <h2 className="text-lg mb-4 text-center uppercase font-mono">{questions[step]}</h2>
+                  <form onSubmit={handleInputSubmit}>
+                    <input
+                      type="text"
+                      value={answers[step]}
+                      onChange={handleInputChange}
+                      className="w-full mb-4 text-center placeholder-center focus:outline-none focus:ring-0 font-man bg-transparent"
+                      placeholder="Enter your answer"
+                      autoFocus
+                    />
                     <button
-                      onClick={scrollToFlowchart}
-                      className="w-8 h-8 bg-[#3C3C3C] text-white flex items-center justify-center hover:bg-[#4C4C4C] transition-colors duration-200"
-                      aria-label="Scroll to flowchart"
+                      type="button"
+                      onClick={handleSkippedQuestions}
+                      className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex items-center justify-center px-4 py-2 bg-[#3C3C3C] text-black font-man bg-[#E8E4DB] border border-[1px] border-black hover:bg-[#3C3C3C] hover:text-white"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                      </svg>
+                      Skip Questions
                     </button>
-                  </div>
+                  </form>
                 </motion.div>
-              )}
-          
-          {activeView === 'history' && (
-    <motion.div
-      key="history"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="w-full"
-    >
-      <History onLoadFlowchart={loadFlowchart} />
-    </motion.div>
-  )}
+              ) : showSpline ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center w-full h-full bg-[#E8E4DB] flex items-center justify-center text-center"
+                >
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1 }}
+                    className="flex items-center justify-center"
+                  >
+                    <Spline
+                      scene="https://prod.spline.design/gbG6-0xtiOTPHBfn/scene.splinecode" 
+                    />
+                  </motion.div>
+                </motion.div>
+            ) : chartFullyRendered ? (
+              <AnimatePresence mode="wait">
+                {activeView === 'profile' && (
+                  <motion.div
+                    key="profile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center w-full"
+                  >
+                    <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">PROFILE</h2>
+                    <h2 className="text-lg mb-2 font-man text-gray-500">{user.email}</h2>
+                    <LogoutButton/>
+                  </motion.div>
+                )}
+            
+                {activeView === 'outcomes' && (
+                  <motion.div
+                    key="outcomes"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center w-full"
+                  >
+                    <div className="mb-4">
+                      <span className="text-6xl font-bold font-ibm text-[#3C3C3C]">
+                        <Counter value={numberOfOutcomes} />
+                        {`${numberOfOutcomes}`}
+                      </span>
+                    </div>
+                    <h2 className="text-lg mb-2 font-ibm uppercase text-[#3C3C3C]">Possible outcomes generated</h2>
+                    <p className='font-man text-gray-500 mb-4'>Interact with the flowchart.</p>
+                    <div className="flex justify-center md:hidden">
+                      <button
+                        onClick={scrollToFlowchart}
+                        className="w-8 h-8 bg-[#3C3C3C] text-white flex items-center justify-center hover:bg-[#4C4C4C] transition-colors duration-200"
+                        aria-label="Scroll to flowchart"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+            
+            {activeView === 'history' && (
+      <motion.div
+        key="history"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="w-full"
+      >
+        <History onLoadFlowchart={loadFlowchart} />
+      </motion.div>
+    )}
 
+              </AnimatePresence>
+              ) : null}
             </AnimatePresence>
-            ) : null}
-          </AnimatePresence>
-        </div>
-        
-        {chartFullyRendered && (
-          <div className="absolute bottom-4 left-4 flex font-man">
-               <button
-              onClick={() => setActiveView('outcomes')}
-              className={`px-4 py-0 mr-2 ${activeView === 'outcomes' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
-            >
-             Graph
-            </button>
-            <button
-              onClick={() => setActiveView('history')}
-              className={`px-4 py-0 mr-2 ${activeView === 'history' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
-            >
-              History
-            </button>
-            <button
-              onClick={() => setActiveView('profile')}
-              className={`px-4 py-1 mr-2 ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
-            >
-              Profile
-            </button>
+          </div>
           
-            <div className="fixed bottom-4 right-4 flex space-x-2 z-10">
-              <button
-                onClick={() => handleZoom('in')}
-                className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+          {chartFullyRendered && (
+            <div className="absolute bottom-4 left-4 flex font-man">
+                 <button
+                onClick={() => setActiveView('outcomes')}
+                className={`px-4 py-0 mr-2 ${activeView === 'outcomes' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
-                +
+               Graph
               </button>
               <button
-                onClick={() => handleZoom('out')}
-                className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+                onClick={() => setActiveView('history')}
+                className={`px-4 py-0 mr-2 ${activeView === 'history' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
-                -
+                History
               </button>
               <button
-                onClick={handleRefresh}
-                className="bg-white text-black px-2 py-0 hover:bg-gray-100 border border-[1px] border-black flex items-center justify-center"
+                onClick={() => setActiveView('profile')}
+                className={`px-4 py-1 mr-2 ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                Profile
+              </button>
+            
+              <div className="fixed bottom-4 right-4 flex space-x-2 z-10">
+                <button
+                  onClick={() => handleZoom('in')}
+                  className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => handleZoom('out')}
+                  className="bg-white text-black px-3 py-0 hover:bg-gray-100 border border-[1px] border-black"
+                >
+                  -
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  className="bg-white text-black px-2 py-0 hover:bg-gray-100 border border-[1px] border-black flex items-center justify-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+              <button
+                onClick={saveFlowchart}
+                className="px-4 py-0 bg-[#00B9F9] text-black rounded-md border broder-[1px] border-black"
+              >
+                Save
               </button>
             </div>
-            <button
-              onClick={saveFlowchart}
-              className="px-4 py-0 bg-[#00B9F9] text-black rounded-md border broder-[1px] border-black"
-            >
-              Save
-            </button>
+          )}
+        </div>
+        {showChart && (
+          <div className="h-screen w-full md:w-4/6 transition-all duration-500 relative">
+            <FlowChart 
+              initialSituation={answers[0]} 
+              initialAction={answers[1]} 
+              showChart={showChart}
+              onChartRendered={handleChartRendered}
+              updateNumberOfOutcomes={updateNumberOfOutcomes}
+              user={user}
+              updateTreeData={updateTreeData}
+              selectedFlowchart={selectedFlowchart}
+            />
           </div>
         )}
       </div>
-      {showChart && (
-        <div className="h-screen w-full md:w-4/6 transition-all duration-500 relative">
-          <FlowChart 
-            initialSituation={answers[0]} 
-            initialAction={answers[1]} 
-            showChart={showChart}
-            onChartRendered={handleChartRendered}
-            updateNumberOfOutcomes={updateNumberOfOutcomes}
-            user={user}
-            updateTreeData={updateTreeData}
-            selectedFlowchart={selectedFlowchart}
-          />
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
@@ -691,8 +699,10 @@ const FlowChart: React.FC<FlowChartProps> = ({
     });
   }, []);
 
-  const generateOutcomes = useCallback(async (parentX: number, parentY: number, action: string): Promise<TreeNode[]> => {
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
 
+  const generateOutcomes = useCallback(async (parentX: number, parentY: number, action: string, isInitial: boolean = false): Promise<TreeNode[]> => {
+    if (isInitial) setIsInitialLoading(true);
     try {
       // EDIT API LINK HERE!
       const response = await fetch('https://willdphan--fastapi-groq-api-generate-outcomes.modal.run', {
@@ -731,11 +741,13 @@ const FlowChart: React.FC<FlowChartProps> = ({
       console.error('Error generating outcomes:', error);
       updateNumberOfOutcomes(0);
       return [];
+    } finally {
+      if (isInitial) setIsInitialLoading(false);
     }
   }, [updateNumberOfOutcomes, VERTICAL_SPACING, HORIZONTAL_SPACING]);
 
   const generateInitialFlowchart = useCallback(async (situation: string, action: string) => {
-    const outcomes = await generateOutcomes(0, 0, action);
+    const outcomes = await generateOutcomes(0, 0, action, true);
     const totalHeight = (outcomes.length - 1) * VERTICAL_SPACING;
     
     // Calculate the starting position very close to the left
@@ -1106,22 +1118,25 @@ const FlowChart: React.FC<FlowChartProps> = ({
   };
   
   return (
-    <div className="h-full w-full relative bg-[#E8E4DB] overflow-auto">
-      <div 
-        ref={containerRef}
-        style={containerStyle}
-        className="relative min-h-full"
-        key={JSON.stringify(treeData)}
-      >
-        {renderNode(treeData)}
+    <>
+      {isInitialLoading && <LoadingPage />}
+      <div className="h-full w-full relative bg-[#E8E4DB] overflow-auto">
+        <div 
+          ref={containerRef}
+          style={containerStyle}
+          className="relative min-h-full"
+          key={JSON.stringify(treeData)}
+        >
+          {renderNode(treeData)}
+        </div>
+        {popupNode && (
+          <FullScreenPopup 
+            node={popupNode} 
+            onClose={() => setPopupNode(null)}
+          />
+        )}
       </div>
-      {popupNode && (
-        <FullScreenPopup 
-          node={popupNode} 
-          onClose={() => setPopupNode(null)}
-        />
-      )}
-    </div>
+    </>
   );
 };
 

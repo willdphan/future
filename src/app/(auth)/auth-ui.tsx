@@ -14,30 +14,25 @@ import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Component
-  export function AuthUI({
-    // props
-    mode,
-    signInWithOAuth,
-    signInWithEmail,
-  }: {
-    mode: 'login' | 'signup';
-    signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>; // returns type ActionResponse
-    signInWithEmail: (email: string, password: string) => Promise<ActionResponse>; // returns type ActionResponse
-  }) {
-
-
-  const router = useRouter();
-
+export function AuthUI({
+  mode,
+  signInWithOAuth,
+  signInWithEmail,
+}: {
+  mode: 'login' | 'signup';
+  signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
+  signInWithEmail: (email: string) => Promise<ActionResponse>;
+}) {
   const [pending, setPending] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const supabase = createClientComponentClient();
+  const [emailFormOpen, setEmailFormOpen] = useState(false);
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
-    const response = await signInWithEmail(email, password);
+    
+    // Use the email state instead of accessing the form element
+    // usestate with email
+    const response = await signInWithEmail(email);
 
     if (response?.error) {
       toast({
@@ -46,24 +41,32 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
       });
     } else {
       toast({
-        description: `Successfully signed in with email: ${email}`,
+        description: `To continue, click the link in the email sent to: ${email}`,
       });
-      router.push('/flowchart')
     }
 
+    // Reset the email state instead of the form
+    setEmail('');
     setPending(false);
   }
+
+  const router = useRouter();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const supabase = createClientComponentClient();
 
   async function handleOAuthClick(provider: 'google' | 'github') {
     setPending(true);
     try {
+      // controls the google behavior
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
+            access_type: 'offline', // refresh access tokens when user not present
+            prompt: 'select_account', // prompts user to select google account
           },
         },
       });
