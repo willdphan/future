@@ -435,14 +435,26 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
     window.location.reload();
   };
 
-  const handleScrollUp = () => {
+  const handleScrollUp = useCallback(() => {
+    console.log('Scroll up button clicked');
     if (containerRef.current && containerRef.current.parentElement) {
-      containerRef.current.parentElement.scrollBy({
-        top: -100,
+      const parentElement = containerRef.current.parentElement;
+      const currentScrollTop = parentElement.scrollTop;
+      console.log('Current scroll position:', currentScrollTop);
+      
+      parentElement.scrollTo({
+        top: Math.max(0, currentScrollTop - 100),
         behavior: 'smooth'
       });
+      
+      // Log the new scroll position after a short delay
+      setTimeout(() => {
+        console.log('New scroll position:', parentElement.scrollTop);
+      }, 100);
+    } else {
+      console.log('Container ref or parent element not found');
     }
-  };
+  }, []);
 
   return (
     <>
