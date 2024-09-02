@@ -394,6 +394,10 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
     });
   };
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
     <div className={`md:flex md:h-screen w-screen overflow-y-auto md:overflow-hidden max-w-screen ${chartFullyRendered ? 'md:flex' : 'block'}`}>
       <div className={`h-screen ${chartFullyRendered ? 'w-full md:w-2/6' : 'w-full'} flex flex-col z-20 ${chartFullyRendered ? 'bg-white' : 'bg-[#E8E4DB]'} transition-colors duration-500 relative`}>
@@ -513,13 +517,7 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
         
         {chartFullyRendered && (
           <div className="absolute bottom-4 left-4 flex font-man">
-            <button
-              onClick={() => setActiveView('profile')}
-              className={`px-4 py-1 mr-2 ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
-            >
-              Profile
-            </button>
-            <button
+               <button
               onClick={() => setActiveView('outcomes')}
               className={`px-4 py-0 mr-2 ${activeView === 'outcomes' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
             >
@@ -530,6 +528,21 @@ const FlowchartPage: React.FC<{ user: { email: string } }> = ({ user }) => {
               className={`px-4 py-0 mr-2 ${activeView === 'history' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
             >
               History
+            </button>
+            <button
+              onClick={() => setActiveView('profile')}
+              className={`px-4 py-1 mr-2 ${activeView === 'profile' ? 'bg-[#3C3C3C] text-white' : 'bg-white text-[#3C3C3C]'} border border-[#3C3C3C]`}
+            >
+              Profile
+            </button>
+          
+            <button
+              onClick={handleRefresh}
+              className="px-4 py-0 mr-2 bg-white text-[#3C3C3C] border border-[#3C3C3C] flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </button>
             <button
               onClick={saveFlowchart}
@@ -571,11 +584,11 @@ const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 md:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-12 overflow-y-auto">
-      <div className="flex justify-between items-start px-5">
+    <div className="fixed inset-0 md:inset-y-0 md:right-0 md:w-4/6 bg-[#E8E4DB] shadow-lg z-50 flex flex-col p-4 md:p-12 overflow-y-auto">
+      <div className="flex justify-between items-start px-2 md:px-5">
         <div className='flex flex-col'>
-          <h2 className="text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>
-          <p className="text-lg text-gray-500 uppercase font-ibm">Option {node.optionNumber}</p>
+          <h2 className="text-xl md:text-2xl mb-2 font-semibold">{node.probability}% {node.title}</h2>
+          <p className="text-md md:text-lg text-gray-500 uppercase font-ibm">Option {node.optionNumber}</p>
         </div>
         <button
           onClick={onClose}
@@ -584,10 +597,10 @@ const FullScreenPopup: React.FC<FullScreenPopupProps> = ({ node, onClose }) => {
           &times;
         </button>
       </div>
-      <div className="flex-grow mt-12 px-5 pr-28">
-        <h3 className="text-lg font-ibm uppercase mb-3">WHY IS THIS?</h3>
+      <div className="flex-grow mt-6 md:mt-12 px-2 md:px-5 md:pr-28">
+        <h3 className="text-md md:text-lg font-ibm uppercase mb-3">WHY IS THIS?</h3>
         <div 
-          className="text-md font-man leading-relaxed [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800"
+          className="text-sm md:text-md font-man leading-relaxed [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800"
           dangerouslySetInnerHTML={createMarkup(node.content)}
         />
       </div>
