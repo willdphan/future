@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 
 import { supabaseMiddlewareClient } from './libs/supabase/supabase-middleware-client';
 
+// Use middleware for global auth checks and redirects
+
 export async function middleware(req: NextRequest) {
   const { supabase, user, res } = await supabaseMiddlewareClient(req);
 
@@ -20,6 +22,7 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+// run middleware on everything except below
 export const config = {
   matcher: [
     /*

@@ -1,19 +1,21 @@
-import React, { useEffect,useState } from 'react';
+// HERO WORDING
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 const testimonials = [
   {
-    quote: "Had no idea what would happen, hopped on and knew the next steps.",
-    name: "Desperate Dave"
+    quote: 'Had no idea what would happen, hopped on and knew the next steps.',
+    name: 'Desperate Dave',
   },
   {
-    quote: "This app is a game-changer for decision-making!",
-    name: "Analytical Anna"
+    quote: 'This app is a game-changer for decision-making!',
+    name: 'Analytical Anna',
   },
   {
     quote: "I've never felt more confident about my choices.",
-    name: "Confident Carl"
-  }
+    name: 'Confident Carl',
+  },
 ];
 
 export function Hero() {
@@ -24,7 +26,7 @@ export function Hero() {
   useEffect(() => {
     // Percentage animation logic (unchanged)
     const percentageInterval = setInterval(() => {
-      setPercentage(prev => {
+      setPercentage((prev) => {
         const change = Math.floor(Math.random() * 11) - 5;
         return Math.min(Math.max(prev + change, 0), 100);
       });
@@ -46,17 +48,33 @@ export function Hero() {
   }, []);
 
   return (
-    <div className='w-fit items-center gap-2 min-w-screen flex flex-col mt-[30px] z-[99] '>
-      <h1 className='font-man text-[2.25em] sm:text-6xl text-black ml-10 leading-tight tracking-normal'>
+    <div className='min-w-screen z-[99] mt-[30px] flex w-fit flex-col items-center gap-2 '>
+      <h1 className='ml-10 font-man text-[2.25em] leading-tight tracking-normal text-black sm:text-6xl'>
         {/* There's a <span className="text-[#00B7FC]">{percentage}%</span> Chance <br/>It'll Play Out, <Link href="/flowchart" className="text-[#00B7FC] underline decoration-4  underline-offset-8">Prolly</Link>. */}
-        There&apos;s a <span className="text-[#00B7FC]"><br className="sm:hidden" /> {percentage}%</span> Chance <br/>
-It&apos;ll Play Out, <Link href="/signup" className="text-[#00B7FC] underline decoration-4  underline-offset-8">Prolly</Link>.
-<br />
+        There&apos;s a{' '}
+        <span className='text-[#00B7FC]'>
+          <br className='sm:hidden' /> {percentage}%
+        </span>{' '}
+        Chance <br />
+        It&apos;ll Play Out,{' '}
+        <Link href='/signup' className='text-[#00B7FC] underline decoration-4  underline-offset-8'>
+          Prolly
+        </Link>
+        .
+        <br />
         <div className='flex flex-col gap-1'>
-        <span className={`mt-4 md:mt-8 text-xs md:text-sm font-mono uppercase w-[18em] sm:w-[25em] inline-block break-words whitespace-normal overflow-wrap-normal italic transition-all duration-1000 ${isBlurred ? 'blur-sm' : 'blur-none'}`}>
+          <span
+            className={`overflow-wrap-normal mt-4 inline-block w-[18em] whitespace-normal break-words font-mono text-xs uppercase italic transition-all duration-1000 sm:w-[25em] md:mt-8 md:text-sm ${
+              isBlurred ? 'blur-sm' : 'blur-none'
+            }`}
+          >
             &quot;{testimonials[currentTestimonial].quote}&quot;
           </span>
-          <span className={`mt-1 text-xs md:text-sm font-mono uppercase w-[25em] inline-block break-words whitespace-normal overflow-wrap-normal transition-all duration-1000 ${isBlurred ? 'blur-sm' : 'blur-none'}`}>
+          <span
+            className={`overflow-wrap-normal mt-1 inline-block w-[25em] whitespace-normal break-words font-mono text-xs uppercase transition-all duration-1000 md:text-sm ${
+              isBlurred ? 'blur-sm' : 'blur-none'
+            }`}
+          >
             - {testimonials[currentTestimonial].name}
           </span>
         </div>

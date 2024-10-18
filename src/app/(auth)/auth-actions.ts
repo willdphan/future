@@ -1,5 +1,7 @@
 'use server';
 
+// Defines server-side authentication functions that interact with Supabase to handle OAuth, email sign-in, and sign-out processes.
+
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { NextResponse } from 'next/server';

@@ -10,6 +10,7 @@ import '@/styles/globals.css';
 
 export const dynamic = 'force-dynamic';
 
+// TODO: tailwind
 const montserrat = Montserrat({
   variable: '--font-montserrat',
   subsets: ['latin'],
@@ -31,11 +32,8 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html lang='en'>
       <body className={cn('font-sans antialiased', montserrat.variable, montserratAlternates.variable)}>
         <div className=''>
-          {/* <header className='flex items-center justify-between py-8 bg-[#535353]'>
-            <Navigation />
-          </header> */}
           <main className='relative flex-1'>
-            <div className='relative min-h-screen min-w-screen'>{children}</div>
+            <div className='min-w-screen relative min-h-screen'>{children}</div>
           </main>
         </div>
         <Toaster />

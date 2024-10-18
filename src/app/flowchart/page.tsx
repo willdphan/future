@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AnimatePresence,motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
-import FlowChart from '@/components/flowchart';
+import FlowChart from '@/components/FlowChart';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { User } from '@supabase/supabase-js';
-
 
 export default function FlowchartPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,19 +21,17 @@ export default function FlowchartPage() {
       try {
         console.log('Checking user session...');
         // Add a small delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const { data: { session } } = await supabase.auth.getSession();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         console.log('Session:', session); // log the session
         if (session && session.user) {
           console.log('User found:', session.user); // log the user
           setUser(session.user);
 
           // Fetch additional user data
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
 
           if (error) {
             console.error('Error fetching user data:', error);
@@ -52,10 +49,8 @@ export default function FlowchartPage() {
         router.push('/signup');
       }
     };
-  
-    checkUser();
 
-    
+    checkUser();
 
     if (searchParams.get('login') === 'success') {
       console.log('Login success detected, refreshing...');
@@ -64,17 +59,19 @@ export default function FlowchartPage() {
   }, [router, supabase, searchParams]);
 
   if (isLoading) {
-    return <AnimatePresence>
-    <motion.div
-      className='flex min-h-screen items-center justify-center bg-[#E8E4DB] text-black text-lg font-mono'
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      LOADING...
-    </motion.div>
-  </AnimatePresence>;
+    return (
+      <AnimatePresence>
+        <motion.div
+          className='flex min-h-screen items-center justify-center bg-[#E8E4DB] font-mono text-lg text-black'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          LOADING...
+        </motion.div>
+      </AnimatePresence>
+    );
   }
 
   return user ? <FlowChart user={user} userData={userData} /> : null;

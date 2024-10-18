@@ -1,14 +1,11 @@
 'use client';
 
+// Renders the authentication user interface, accepting sign-in functions as props to handle user interactions.
+
 import { FormEvent, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { IoLogoGithub, IoLogoGoogle } from 'react-icons/io5';
-
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Input } from '@/components/ui/input';
+import { IoLogoGoogle } from 'react-icons/io5';
 import { toast } from '@/components/ui/use-toast';
 import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
@@ -29,7 +26,7 @@ export function AuthUI({
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
-    
+
     // Use the email state instead of accessing the form element
     // usestate with email
     const response = await signInWithEmail(email);
@@ -84,85 +81,86 @@ export function AuthUI({
   }
 
   return (
-    <div className="font-[sans-serif] flex h-screen w-full">
-    <div className="hidden lg:flex w-1/2 bg-[#E8E4DB] items-center justify-center p-4">
-      <div className="w-full max-w-[800px] aspect-square">
-        <Spline
-         scene="https://prod.spline.design/zLtKyCfRf2bEYScH/scene.splinecode" 
-        />
-      </div>
-    </div>
-
-    <div className="w-full lg:w-1/2 p-8 overflow-auto flex items-center justify-center bg-[#E8E4DB] bg-white">
-      <form onSubmit={handleEmailSubmit} className="max-w-md w-full">
-        <div className="mb-6">
-          <h3 className="text-gray-800 text-3xl font-extrabold font-man ">Sign Up</h3>
-          <p className='text-md mt-4 text-gray-800 font-man'>
-            Or login with your email.
-          </p>
+    <div className='flex h-screen w-full font-[sans-serif]'>
+      <div className='hidden w-1/2 items-center justify-center bg-[#E8E4DB] p-4 lg:flex'>
+        <div className='aspect-square w-full max-w-[800px]'>
+          <Spline scene='https://prod.spline.design/zLtKyCfRf2bEYScH/scene.splinecode' />
         </div>
+      </div>
 
-          <div className="mb-4">
-            <label className="text-black text-sm mb-2 block font-man">Email</label>
-            <div className="relative flex items-center">
+      <div className='flex w-full items-center justify-center overflow-auto bg-[#E8E4DB] bg-white p-8 lg:w-1/2'>
+        <form onSubmit={handleEmailSubmit} className='w-full max-w-md'>
+          <div className='mb-6'>
+            <h3 className='font-man text-3xl font-extrabold text-gray-800 '>Sign Up</h3>
+            <p className='text-md mt-4 font-man text-gray-800'>Or login with your email.</p>
+          </div>
+
+          <div className='mb-4'>
+            <label className='mb-2 block font-man text-sm text-black'>Email</label>
+            <div className='relative flex items-center'>
               <input
-                type="email"
+                type='email'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full text-sm text-gray-800 bg-white focus:bg-transparent px-4 py-3.5  border  border-black font-man"
-                placeholder="Enter email"
+                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm  text-gray-800 focus:bg-transparent'
+                placeholder='Enter email'
               />
               {/* Email icon SVG */}
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="text-black text-sm mb-2 block font-man">Password</label>
-            <div className="relative flex items-center">
+          <div className='mb-4'>
+            <label className='mb-2 block font-man text-sm text-black'>Password</label>
+            <div className='relative flex items-center'>
               <input
-                type="password"
+                type='password'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full text-sm text-gray-800 bg-white focus:bg-transparent px-4 py-3.5  font-man border border-black"
-                placeholder="Enter password"
+                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm text-gray-800 focus:bg-transparent'
+                placeholder='Enter password'
               />
               {/* Password icon SVG */}
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4 font-man py-[0.5]">
-            <div className="flex items-center">
-              <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 shrink-0  border-gray-300 " />
-              <label htmlFor="remember-me" className="ml-3 block text-black text-sm">
+          <div className='mb-4 flex items-center justify-between py-[0.5] font-man'>
+            <div className='flex items-center'>
+              <input
+                id='remember-me'
+                name='remember-me'
+                type='checkbox'
+                className='h-4 w-4 shrink-0  border-gray-300 '
+              />
+              <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
                 Remember me
               </label>
             </div>
-            <a href="javascript:void(0);" className="text-[#0097FC] font-medium text-sm hover:underline">
+            <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
               Forgot Password?
             </a>
           </div>
 
           <button
-            type="submit"
+            type='submit'
             disabled={pending}
-            className="w-full py-3 px-6 text-sm tracking-wide text-black bg-[#E8E4DB] hover:bg-[#D4D0C6] mb-4 border-[1px] border border-black mb-[-1px] font-man font-semibold"
+            className='mb-4 mb-[-1px] w-full border border-[1px] border-black bg-[#E8E4DB] px-6 py-3 font-man text-sm font-semibold tracking-wide text-black hover:bg-[#D4D0C6]'
           >
             Sign In
           </button>
 
-          <div className="my-4 flex items-center gap-4">
-            <hr className="w-full border-black" />
-            <p className="text-sm text-black text-center">or</p>
-            <hr className="w-full border-black" />
+          <div className='my-4 flex items-center gap-4'>
+            <hr className='w-full border-black' />
+            <p className='text-center text-sm text-black'>or</p>
+            <hr className='w-full border-black' />
           </div>
 
           <button
-            type="button"
+            type='button'
             onClick={() => handleOAuthClick('google')}
             disabled={pending}
-            className="w-full flex items-center justify-center gap-4 py-3 px-6 text-sm tracking-wide text-gray-800 border-[1px] border-black bg-white hover:bg-gray-100 focus:outline-none font-man font-semibold"
+            className='flex w-full items-center justify-center gap-4 border-[1px] border-black bg-white px-6 py-3 font-man text-sm font-semibold tracking-wide text-gray-800 hover:bg-gray-100 focus:outline-none'
           >
             <IoLogoGoogle size={20} />
             Continue with Google
@@ -179,13 +177,19 @@ export function AuthUI({
           </button> */}
 
           {mode === 'signup' && (
-            <p className="text-sm text-gray-600 mt-4">
+            <p className='mt-4 text-sm text-gray-600'>
               By clicking continue, you agree to our{' '}
-              <Link href="https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg" className="text-[#0097FC] hover:underline">
+              <Link
+                href='https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg'
+                className='text-[#0097FC] hover:underline'
+              >
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg" className="text-[#0097FC] hover:underline">
+              <Link
+                href='https://i.pinimg.com/736x/e9/ee/e5/e9eee5e921e68379978009a9751f7ae0.jpg'
+                className='text-[#0097FC] hover:underline'
+              >
                 Privacy Policy
               </Link>
               .

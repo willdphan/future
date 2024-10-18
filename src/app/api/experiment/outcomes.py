@@ -2,8 +2,6 @@
 """
 Try different RAG methods with eval.
 """
-
-
 # Reddit API credentials
 # reddit = praw.Reddit(
 #     client_id="NAwLZrLY3xLaiyUt7bghPA",
@@ -14,8 +12,6 @@ Try different RAG methods with eval.
 # import os
 # # Set OpenAI API key
 # os.environ['OPENAI_API_KEY'] = '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'
-
-
 from llama_index.core import Document, VectorStoreIndex, Settings
 from pydantic import BaseModel
 from llama_index.llms.openai import OpenAI
@@ -35,8 +31,6 @@ import re
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-
 
 app = FastAPI()
 
