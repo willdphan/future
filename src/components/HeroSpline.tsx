@@ -1,4 +1,5 @@
 // SPLINE ANIMATION
+/* Renders Spline animation */
 
 import Spline from '@splinetool/react-spline';
 

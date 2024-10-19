@@ -1,5 +1,4 @@
-import React, { useEffect,useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Flowchart {
@@ -25,7 +24,9 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
       setLoading(true);
       setError(null);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
           console.log('User not authenticated');
           setError('User not authenticated');
@@ -44,7 +45,14 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
           setError(error.message);
         } else {
           console.log('Fetched flowcharts:', data);
-          setFlowcharts(data || []);
+          // Since the data fetched only includes 'id' and 'created_at', we need to ensure that the data type matches the Flowchart interface.
+          // We can do this by mapping over the data and adding the missing properties with default values.
+          const formattedData = data.map((item: any) => ({
+            ...item,
+            user_email: '', // Assuming an empty string as a default value for user_email
+            tree_data: {}, // Assuming an empty object as a default value for tree_data
+          }));
+          setFlowcharts(formattedData);
         }
       } catch (err) {
         console.error('Exception when fetching flowcharts:', err);
@@ -63,21 +71,19 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="p-4 text-center">
-      <h2 className="text-lg mb-4 font-ibm uppercase text-black">Saved Flowcharts</h2>
+    <div className='p-4 text-center'>
+      <h2 className='mb-4 font-ibm text-lg uppercase text-black'>Saved Flowcharts</h2>
       {flowcharts.length === 0 ? (
-        <p className="font-man text-gray-500">No saved flowcharts.</p>
+        <p className='font-man text-gray-500'>No saved flowcharts.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className='space-y-2'>
           {flowcharts.map((flowchart) => (
             <li key={flowchart.id}>
               <button
                 onClick={() => onLoadFlowchart(flowchart.id)}
-                className="w-full text-left px-4 py-2 bg-white border border-black rounded-md hover:bg-gray-100 transition-colors duration-200"
+                className='w-full rounded-md border border-black bg-white px-4 py-2 text-left transition-colors duration-200 hover:bg-gray-100'
               >
-                <span className="font-man text-gray-700">
-                  {new Date(flowchart.created_at).toLocaleString()}
-                </span>
+                <span className='font-man text-gray-700'>{new Date(flowchart.created_at).toLocaleString()}</span>
               </button>
             </li>
           ))}

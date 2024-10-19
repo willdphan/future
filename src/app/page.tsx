@@ -1,13 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import { Container } from '@/components/Container';
-import FlowchartPage from './flowchart/page';
-import { Hero } from '@/components/hero';
+import Hero from '@/components/Hero';
 import HeroSpline from '@/components/HeroSpline';
-import { Button } from '@/components/ui/button';
-import { PricingSection } from '@/features/pricing/components/pricing-section';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 import styles from '@/styles/HomePage.module.css';

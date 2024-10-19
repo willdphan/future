@@ -1,4 +1,5 @@
 // HERO WORDING
+/* Display Testimonials and Header */
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ const testimonials = [
   },
 ];
 
-export function Hero() {
+export default function Hero() {
   const [percentage, setPercentage] = useState(70);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isBlurred, setIsBlurred] = useState(false);
