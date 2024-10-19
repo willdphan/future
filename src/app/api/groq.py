@@ -33,6 +33,7 @@ image = (
 ###########
 # CLASSES #
 ###########
+
 class Query(BaseModel):
     query: str
 
@@ -46,6 +47,8 @@ class Outcome(BaseModel):
 class OutcomesResponse(BaseModel):
     outcomes: List[Outcome]
 
+# responsible for interacting with the Groq API.
+# provides a method to create chat completions using the Groq language model.
 class Groq:
     def __init__(self, api_key):
         self.api_key = api_key
@@ -66,6 +69,8 @@ class Groq:
         response.raise_for_status()
         return response.json()
 
+# responsible for interacting with the Exa API.
+# provides a method to perform searches using the Exa search engine.
 class Exa:
     def __init__(self, api_key):
         self.api_key = api_key
@@ -89,10 +94,29 @@ class Exa:
         except requests.RequestException as e:
             print(f"EXA API error: {str(e)}")
             return {"results": []}
-
+        
 ##############
 # FUNCTIONS #
 #############
+
+# Define the prompt template as a separate variable
+OUTCOME_PROMPT_TEMPLATE = """You are an assistant that generates possible outcomes for given actions.
+Given the setting and action: '{query}', and considering this additional context:
+
+{exa_context}
+
+List 4-5 possible outcomes. For each outcome, provide:
+1. A short title (3-5 words)
+2. A detailed description (at least 500 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
+3. The probability of occurring (as a percentage).
+4. Reference the provided URLs where appropriate in your description using HTML anchor tags like this: <a href="http://example.com">link text</a>. Use the actual URLs provided in the context. Must use sources to help provide possible outcomes in user's scenario in EVERY POSSIBLE OUTCOME.
+
+Format each outcome as follows:
+1. Title (XX%)
+Detailed description with hyperlinks...
+
+The probabilities should sum up to 100%.
+"""
 
 # Generate possible outcomes based on a given query using Groq and EXA APIs
 @app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
@@ -123,24 +147,8 @@ def generate_outcomes(query: Query):
         # Set up Groq client
         client = Groq(api_key=GROQ_API_KEY)
 
-        # Groq prompt including EXA context
-        prompt = f"""You are an assistant that generates possible outcomes for given actions.
-        Given the setting and action: '{query.query}', and considering this additional context:
-
-        {exa_context}
-
-        List 4-5 possible outcomes. For each outcome, provide:
-        1. A short title (3-5 words)
-        2. A detailed description (at least 500 words) explaining the outcome, its implications, and any relevant context. Use multiple paragraphs if necessary.
-        3. The probability of occurring (as a percentage).
-        4. Reference the provided URLs where appropriate in your description using HTML anchor tags like this: <a href="http://example.com">link text</a>. Use the actual URLs provided in the context. Must use sources to help provide possible outcomes in user's scenario in EVERY POSSIBLE OUTCOME.
-
-        Format each outcome as follows:
-        1. Title (XX%)
-        Detailed description with hyperlinks...
-
-        The probabilities should sum up to 100%.
-        """
+        # Use the prompt template in the generate_outcomes function
+        prompt = OUTCOME_PROMPT_TEMPLATE.format(query=query.query, exa_context=exa_context)
 
         try:
             chat_completion = client.chat_completions_create(
@@ -156,6 +164,7 @@ def generate_outcomes(query: Query):
             )
             groq_response = chat_completion['choices'][0]['message']['content']
             print(f"Groq response: {groq_response}")
+            
         except Exception as e:
             error_msg = f"Error calling Groq API: {str(e)}"
             print(error_msg)
@@ -229,7 +238,6 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
                     description='\n'.join(current_description).strip(),
                     probability=current_outcome[2],
                     hyperlinks=current_hyperlinks,
-             
                 ))
             # 2. Start a new outcome
             current_outcome = (int(title_match.group(1)), title_match.group(2), float(title_match.group(3)))
@@ -237,11 +245,15 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
 
         # Check if line contains a hyperlink
         elif hyperlink_match := re.search(r'<a href="(.*?)">(.*?)</a>', line):
-            current_hyperlinks.append({"url": hyperlink_match.group(1), "text": hyperlink_match.group(2)})
+            url = hyperlink_match.group(1)
+            text = hyperlink_match.group(2)
+            # Only add the hyperlink if it's in the provided hyperlinks list
+            if url in hyperlinks:
+                current_hyperlinks.append({"url": url, "text": text})
             current_description.append(line)
-        # If none of the above, add line to description or code content
+        # If none of the above, add line to description
         elif current_outcome:
-            (current_description).append(line)
+            current_description.append(line)
 
     # Add the last outcome if there is one
     if current_outcome:
@@ -251,7 +263,6 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
             description='\n'.join(current_description).strip(),
             probability=current_outcome[2],
             hyperlinks=current_hyperlinks,
-           
         ))
 
     return outcomes
