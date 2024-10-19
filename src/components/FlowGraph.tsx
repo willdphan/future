@@ -91,9 +91,6 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     outcomes: [], // This should now be correctly typed
   });
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedNode, setDraggedNode] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedPath, setSelectedPath] = useState<number[]>([]);
   const [editingNode, setEditingNode] = useState('start');
   const [selectedNodeDetail, setSelectedNodeDetail] = useState(null);
@@ -278,32 +275,15 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     (e: React.MouseEvent, nodeId: string) => {
       e.stopPropagation();
       const node = findNodeById(treeData, nodeId);
-      if (node) {
-        setIsDragging(true);
-        setDraggedNode(nodeId);
-        setDragOffset({
-          x: e.clientX - node.position.x,
-          y: e.clientY - node.position.y,
-        });
-      }
     },
     [treeData]
   );
 
   const handleNodeDrag = useCallback(
     (e: MouseEvent) => {
-      if (!isDragging || !draggedNode) return;
-
       setTreeData((prevTree) => {
         const newTree = JSON.parse(JSON.stringify(prevTree));
         const updateNodePosition = (node: TreeNode): boolean => {
-          if (node.id === draggedNode) {
-            node.position = {
-              x: e.clientX - dragOffset.x,
-              y: e.clientY - dragOffset.y,
-            };
-            return true;
-          }
           return node.outcomes.some(updateNodePosition);
         };
 
@@ -312,13 +292,8 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
         return newTree;
       });
     },
-    [isDragging, draggedNode, dragOffset, updateTreeData]
+    [updateTreeData]
   );
-
-  const handleNodeDragEnd = useCallback(() => {
-    setIsDragging(false);
-    setDraggedNode(null);
-  }, []);
 
   const handleActionSubmit = useCallback(
     async (nodeId: string, content: string) => {
@@ -430,7 +405,6 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
           }}
           onClick={(e) => handleNodeClick(node.id, e)}
           onDoubleClick={(e) => handleNodeDoubleClick(node.id, e)}
-          onMouseDown={(e) => handleNodeDragStart(e, node.id)}
         >
           {node.type === 'action' && (isEditing || node.content === '') ? (
             <form
