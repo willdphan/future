@@ -1,6 +1,14 @@
-//////////////////////
-// FULL SCREEN POPUP //
-//////////////////////
+/*
+NODE POPUP DETAIL
+
+Functional component that displays detailed information about a specific node in a full-screen overlay. 
+
+The popup displays the following information from the node prop:
+• Probability percentage
+• Title
+• Option number
+• Detailed content
+*/
 
 import DOMPurify from 'dompurify';
 
