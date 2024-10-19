@@ -94,10 +94,6 @@ class Exa:
         except requests.RequestException as e:
             print(f"EXA API error: {str(e)}")
             return {"results": []}
-        
-##############
-# FUNCTIONS #
-#############
 
 # Define the prompt template as a separate variable
 OUTCOME_PROMPT_TEMPLATE = """You are an assistant that generates possible outcomes for given actions.
@@ -118,106 +114,63 @@ Detailed description with hyperlinks...
 The probabilities should sum up to 100%.
 """
 
+##############
+# FUNCTIONS #
+#############
+
 # Generate possible outcomes based on a given query using Groq and EXA APIs
 @app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
 @web_endpoint(method="POST")
 def generate_outcomes(query: Query):
-        # Get API keys from environment variables
-    GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-    EXA_API_KEY = os.getenv('EXA_API_KEY')
     try:
-        print(f"Received query: {query.query}")
-        
-        # EXA API call
+        # Get API keys
+        GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+        EXA_API_KEY = os.getenv('EXA_API_KEY')
+
+        # EXA API call and processing
         exa_client = Exa(api_key=EXA_API_KEY)
         exa_data = exa_client.search(query.query)
-        print(f"EXA response: {exa_data}")
+        exa_context, hyperlinks = process_exa_results(exa_data)
 
-        # Process EXA results
-        exa_context = ""
-        hyperlinks = []
-        if 'results' in exa_data and isinstance(exa_data['results'], list):
-            for result in exa_data['results']:
-                exa_context += f"\nTitle: {result.get('title', '')}\nURL: {result.get('url', '')}\n"
-                hyperlinks.append(result.get('url', ''))
-        
-        print(f"Processed EXA context: {exa_context}")
-        print(f"Hyperlinks: {hyperlinks}")
-
-        # Set up Groq client
+        # Groq API call
         client = Groq(api_key=GROQ_API_KEY)
-
-        # Use the prompt template in the generate_outcomes function
         prompt = OUTCOME_PROMPT_TEMPLATE.format(query=query.query, exa_context=exa_context)
+        groq_response = get_groq_response(client, prompt)
 
-        try:
-            chat_completion = client.chat_completions_create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                model="mixtral-8x7b-32768",
-                temperature=0.7,
-                max_tokens=4000,
-            )
-            groq_response = chat_completion['choices'][0]['message']['content']
-            print(f"Groq response: {groq_response}")
-            
-        except Exception as e:
-            error_msg = f"Error calling Groq API: {str(e)}"
-            print(error_msg)
-            return JSONResponse(status_code=500, content={"detail": error_msg})
-
-        if not groq_response or len(groq_response.strip()) < 10:
-            error_msg = "Failed to generate meaningful outcomes"
-            print(error_msg)
-            return JSONResponse(status_code=500, content={"detail": error_msg})
-
-        try:
-            outcomes = parse_outcomes_with_code_and_links(groq_response, hyperlinks)
-        except Exception as e:
-            error_msg = f"Error parsing outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
-            print(error_msg)
-            return JSONResponse(status_code=500, content={"detail": error_msg})
+        # Parse outcomes
+        outcomes = parse_outcomes_with_code_and_links(groq_response, hyperlinks)
 
         if not outcomes:
-            error_msg = "No outcomes were generated"
-            print(error_msg)
-            return JSONResponse(status_code=500, content={"detail": error_msg})
-
-        print("Generated outcomes:")
-        for outcome in outcomes:
-            print(f"Option {outcome.option_number}: {outcome.title} - {outcome.description} ({outcome.probability}%)")
-            print(f"Hyperlinks: {outcome.hyperlinks}")
+            raise ValueError("No outcomes were generated")
 
         return OutcomesResponse(outcomes=outcomes)
 
     except Exception as e:
-        error_msg = f"Unexpected error in generate_outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
+        error_msg = f"Error in generate_outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
         print(error_msg)
         return JSONResponse(status_code=500, content={"detail": error_msg})
 
-"""
-This function takes a big chunk of text and breaks it down into separate "outcomes". Each outcome has a title, description, probability, and might include links.
+def process_exa_results(exa_data):
+    exa_context = ""
+    hyperlinks = []
+    if 'results' in exa_data and isinstance(exa_data['results'], list):
+        for result in exa_data['results']:
+            exa_context += f"\nTitle: {result.get('title', '')}\nURL: {result.get('url', '')}\n"
+            hyperlinks.append(result.get('url', ''))
+    return exa_context, hyperlinks
 
-Main parts it's looking for:
-• Title and Probability: It looks for lines that start with a number, followed by a title and a percentage. This marks the start of a new outcome.
-• Hyperlinks: It searches for web links in the text.
-• Description: Any other text is considered part of the outcome's description.
+def get_groq_response(client, prompt):
+    try:
+        chat_completion = client.chat_completions_create(
+            messages=[{"role": "user", "content": prompt}],
+            model="mixtral-8x7b-32768",
+            temperature=0.7,
+            max_tokens=4000,
+        )
+        return chat_completion['choices'][0]['message']['content']
+    except Exception as e:
+        raise ValueError(f"Error calling Groq API: {str(e)}")
 
-1. Current Outcome:
-The "current outcome" refers to the outcome that the function is currently processing. As the function reads through the text line by line, it's building up the details of one outcome at a time. This "current outcome" includes:
-• The option number
-• The title
-• The description (which can span multiple lines)
-• The probability
-• Any hyperlinks
-
-2. Starting a New Outcome:
-The function recognizes the start of a new outcome when it encounters a line that matches the pattern for an outcome title (a number, followed by a title, and a probability in parentheses). 
-"""
 # Parse the Groq API response into structured Outcome objects
 def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
     # Initialize lists to store outcomes and current outcome details
