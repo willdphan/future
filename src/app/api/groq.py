@@ -1,3 +1,13 @@
+# Create Keys
+# modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
+
+# modal secret update my-api-keys GROQ_API_KEY=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 EXA_API_KEY=af5bcded-d8cd-4f27-938e-003b8a359e08
+
+# Deploy
+# Run: modal deploy src/app/api/groq.py
+
+# curl -X POST https://willdphan--fastapi-groq-api-generate-outcomes.modal.run -H "Content-Type: application/json" -d '{"query": "test query"}'
+
 import os
 import re
 import traceback
@@ -6,9 +16,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import modal
 from modal import Image, Secret, web_endpoint, App
 import requests
-from typing import List, Optional, Dict  # Add Dict here
+from typing import List, Optional, Dict
 
 app = App("fastapi-groq-api")
 
@@ -17,18 +28,8 @@ image = (
     .pip_install("fastapi", "uvicorn", "groq", "pydantic", "requests")
 )
 
-# Hardcode the Groq API key (for development only)
-GROQ_API_KEY = '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'
-
-# Add EXA API key (make sure to set this in your environment or secrets)
-EXA_API_KEY = os.environ.get('EXA_API_KEY', 'af5bcded-d8cd-4f27-938e-003b8a359e08')
-
 class Query(BaseModel):
     query: str
-
-class CodeSnippet(BaseModel):
-    language: str
-    code: str
 
 class Outcome(BaseModel):
     option_number: int
@@ -36,7 +37,6 @@ class Outcome(BaseModel):
     description: str
     probability: float
     hyperlinks: List[Dict[str, str]] = []  
-    code_snippets: List[CodeSnippet] = []
 
 class OutcomesResponse(BaseModel):
     outcomes: List[Outcome]
@@ -63,9 +63,12 @@ class Groq:
     
 # Remove the global exception handler
 
-@app.function(image=image)
+@app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
 @web_endpoint(method="POST")
 def generate_outcomes(query: Query):
+        # Get API keys from environment variables
+    GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+    EXA_API_KEY = os.getenv('EXA_API_KEY')
     try:
         print(f"Received query: {query.query}")
         
@@ -95,7 +98,7 @@ def generate_outcomes(query: Query):
         hyperlinks = []
         if 'results' in exa_data and isinstance(exa_data['results'], list):
             for result in exa_data['results']:
-                exa_context += f"\nTitle: {result.get('title', '')}\nSnippet: {result.get('snippet', '')}\nURL: {result.get('url', '')}\n"
+                exa_context += f"\nTitle: {result.get('title', '')}\nURL: {result.get('url', '')}\n"
                 hyperlinks.append(result.get('url', ''))
         
         print(f"Processed EXA context: {exa_context}")
@@ -163,8 +166,6 @@ def generate_outcomes(query: Query):
         for outcome in outcomes:
             print(f"Option {outcome.option_number}: {outcome.title} - {outcome.description} ({outcome.probability}%)")
             print(f"Hyperlinks: {outcome.hyperlinks}")
-            for snippet in outcome.code_snippets:
-                print(f"Code snippet ({snippet.language}):\n{snippet.code}")
 
         return OutcomesResponse(outcomes=outcomes)
 
@@ -173,61 +174,67 @@ def generate_outcomes(query: Query):
         print(error_msg)
         return JSONResponse(status_code=500, content={"detail": error_msg})
 
+"""
+This function takes a big chunk of text and breaks it down into separate "outcomes". Each outcome has a title, description, probability, and might include links.
+
+Main parts it's looking for:
+• Title and Probability: It looks for lines that start with a number, followed by a title and a percentage. This marks the start of a new outcome.
+• Hyperlinks: It searches for web links in the text.
+• Description: Any other text is considered part of the outcome's description.
+
+1. Current Outcome:
+The "current outcome" refers to the outcome that the function is currently processing. As the function reads through the text line by line, it's building up the details of one outcome at a time. This "current outcome" includes:
+The option number
+The title
+The description (which can span multiple lines)
+The probability
+Any hyperlinks
+
+2. Starting a New Outcome:
+The function recognizes the start of a new outcome when it encounters a line that matches the pattern for an outcome title (a number, followed by a title, and a probability in parentheses). 
+"""
 def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
+    # Initialize lists to store outcomes and current outcome details
     outcomes = []
-    lines = response_text.split('\n')
     current_outcome = None
-    current_description = ""
-    current_code_snippets = []
+    current_description = []
     current_hyperlinks = []
 
-    for line in lines:
-        title_match = re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line)
-        code_start_match = re.match(r'\[CODE:(.*?)\]', line)
-        code_end_match = re.match(r'\[/CODE\]', line)
-        hyperlink_match = re.search(r'<a href="(.*?)">(.*?)</a>', line)
-        
-        if title_match:
+    # Process the response text line by line
+    for line in response_text.split('\n'):
+        # Check if line is a new outcome title
+        if title_match := re.match(r'(\d+)\.\s*(.*?)\s*\((\d+(?:\.\d+)?)%\)', line):
+            # 1. If there's a current outcome, add it to the outcomes list
             if current_outcome:
                 outcomes.append(Outcome(
                     option_number=current_outcome[0],
                     title=current_outcome[1],
-                    description=current_description.strip(),
+                    description='\n'.join(current_description).strip(),
                     probability=current_outcome[2],
                     hyperlinks=current_hyperlinks,
-                    code_snippets=current_code_snippets
+             
                 ))
-            option_number = int(title_match.group(1))
-            title = title_match.group(2)
-            probability = float(title_match.group(3))
-            current_outcome = (option_number, title, probability)
-            current_description = ""
-            current_code_snippets = []
-            current_hyperlinks = []
-        elif code_start_match:
-            language = code_start_match.group(1)
-            code_content = ""
-        elif code_end_match:
-            current_code_snippets.append(CodeSnippet(language=language, code=code_content.strip()))
-        elif hyperlink_match:
-            url = hyperlink_match.group(1)
-            text = hyperlink_match.group(2)
-            current_hyperlinks.append({"url": url, "text": text})
-            current_description += line + "\n"
-        elif current_outcome:
-            if code_start_match:
-                code_content += line + "\n"
-            else:
-                current_description += line + "\n"
+            # 2. Start a new outcome
+            current_outcome = (int(title_match.group(1)), title_match.group(2), float(title_match.group(3)))
+            current_description, current_hyperlinks = [], []
 
+        # Check if line contains a hyperlink
+        elif hyperlink_match := re.search(r'<a href="(.*?)">(.*?)</a>', line):
+            current_hyperlinks.append({"url": hyperlink_match.group(1), "text": hyperlink_match.group(2)})
+            current_description.append(line)
+        # If none of the above, add line to description or code content
+        elif current_outcome:
+            (current_description).append(line)
+
+    # Add the last outcome if there is one
     if current_outcome:
         outcomes.append(Outcome(
             option_number=current_outcome[0],
             title=current_outcome[1],
-            description=current_description.strip(),
+            description='\n'.join(current_description).strip(),
             probability=current_outcome[2],
             hyperlinks=current_hyperlinks,
-            code_snippets=current_code_snippets
+           
         ))
 
     return outcomes
@@ -252,8 +259,3 @@ def fastapi_app():
 # To run locally for testing
 if __name__ == "__main__":
     app.serve()
-
-# To deploy
-# Run: modal deploy src/app/api/groq.py
-
-# curl -X POST https://willdphan--fastapi-groq-api-generate-outcomes.modal.run -H "Content-Type: application/json" -d '{"query": "test query"}'
