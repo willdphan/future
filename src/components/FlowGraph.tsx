@@ -1,6 +1,13 @@
-////////////////////////
-// FLOWCHART COMPONENT //
-////////////////////////
+/*
+COMPONENT THAT RENDERS INTERACTIVE FLOWCHART:
+1. It visualizes a tree-like data structure representing situations, actions, and outcomes.
+2. It allows for dynamic generation of outcomes based on user input.
+3. It supports user interactions such as clicking, double-clicking, and dragging nodes.
+4. It uses SVG to draw connecting lines between nodes.
+5. It includes features like node expansion, editing, and selection.
+6. It incorporates animations using Framer Motion.
+7. It's responsive to zoom levels and manages its own positioning within a container.
+*/
 
 import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -9,7 +16,7 @@ import FullScreenPopup from './FullScreenPopup';
 import { motion } from 'framer-motion'; // Add this import
 import { PieGraph } from './PieGraph'; // Make sure this import path is correct
 
-interface FlowChartProps {
+interface FlowGraphProps {
   initialSituation: string;
   initialAction: string;
   showChart: boolean;
@@ -18,6 +25,7 @@ interface FlowChartProps {
   user: { email: string };
   updateTreeData: (newData: TreeNode) => void;
   selectedFlowchart?: TreeNode | null;
+  zoom: Number;
 }
 
 type NodeType = 'situation' | 'action' | 'outcome';
@@ -53,7 +61,7 @@ const INITIAL_HORIZONTAL_SPACING = 300;
 const HORIZONTAL_SPACING = 550;
 const VERTICAL_SPACING = 150;
 
-const FlowGraph: React.FC<FlowChartProps> = ({
+const FlowGraph: React.FC<FlowGraphProps> = ({
   initialSituation,
   initialAction,
   showChart,

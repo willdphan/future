@@ -1,5 +1,14 @@
 'use client';
 
+/*
+MAIN CONTAINER COMPONENT FOR FLOWCHART FUNCTIONALITY
+1. It manages the overall state of the flowchart, including user interactions, data loading, and view switching.
+2. It handles user input for the initial situation and action.
+3. It manages the different views (outcomes, history, profile) and their respective components.
+4. It contains controls for zooming, saving, and refreshing the flowchart.
+5. It passes necessary props and callbacks to the FlowGraph component. 
+*/
+
 // 1. Imports
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
@@ -10,13 +19,10 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 // Local imports
 import withAuth from '@/utils/withAuth';
-import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
 import Counter from './Counter';
 import History from './History';
 import LoadingPage from './Loading';
 import LogoutButton from './LogoutButton';
-import PieGraph from './PieGraph';
-import FullScreenPopup from './FullScreenPopup';
 import FlowGraph from './FlowGraph';
 
 ////////////////
