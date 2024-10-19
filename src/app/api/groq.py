@@ -94,6 +94,10 @@ class Exa:
         except requests.RequestException as e:
             print(f"EXA API error: {str(e)}")
             return {"results": []}
+        
+##########
+# PROMPT #
+##########
 
 # Define the prompt template as a separate variable
 OUTCOME_PROMPT_TEMPLATE = """You are an assistant that generates possible outcomes for given actions.
@@ -138,7 +142,7 @@ def generate_outcomes(query: Query):
         groq_response = get_groq_response(client, prompt)
 
         # Parse outcomes
-        outcomes = parse_outcomes_with_code_and_links(groq_response, hyperlinks)
+        outcomes = parse_outcomes_with_links(groq_response, hyperlinks)
 
         if not outcomes:
             raise ValueError("No outcomes were generated")
@@ -150,6 +154,9 @@ def generate_outcomes(query: Query):
         print(error_msg)
         return JSONResponse(status_code=500, content={"detail": error_msg})
 
+# Process the results from the Exa API search
+# Extracts titles and URLs from the search results
+# Returns a formatted context string and a list of hyperlinks
 def process_exa_results(exa_data):
     exa_context = ""
     hyperlinks = []
@@ -159,6 +166,9 @@ def process_exa_results(exa_data):
             hyperlinks.append(result.get('url', ''))
     return exa_context, hyperlinks
 
+# Send a prompt to the Groq API and get the response
+# Uses the Mixtral 8x7B model with specific parameters
+# Returns the generated content or raises an error if the API call fails
 def get_groq_response(client, prompt):
     try:
         chat_completion = client.chat_completions_create(
@@ -172,7 +182,7 @@ def get_groq_response(client, prompt):
         raise ValueError(f"Error calling Groq API: {str(e)}")
 
 # Parse the Groq API response into structured Outcome objects
-def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
+def parse_outcomes_with_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
     # Initialize lists to store outcomes and current outcome details
     outcomes = []
     current_outcome = None
