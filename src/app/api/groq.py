@@ -17,17 +17,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import modal
-from modal import Image, Secret, web_endpoint, App
+from modal import Image, web_endpoint, App
 import requests
 from typing import List, Optional, Dict
 
+# modal labs app name
 app = App("fastapi-groq-api")
 
+# install necessary packages
 image = (
     Image.debian_slim()
     .pip_install("fastapi", "uvicorn", "groq", "pydantic", "requests")
 )
 
+###########
+# CLASSES #
+###########
 class Query(BaseModel):
     query: str
 
@@ -60,9 +65,36 @@ class Groq:
         response = requests.post(f"{self.api_base}/chat/completions", headers=headers, json=data)
         response.raise_for_status()
         return response.json()
-    
-# Remove the global exception handler
 
+class Exa:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.api_base = "https://api.exa.ai"
+
+    def search(self, query, num_results=5, use_autoprompt=True):
+        url = f"{self.api_base}/search"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        payload = {
+            "query": query,
+            "num_results": num_results,
+            "use_autoprompt": use_autoprompt
+        }
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"EXA API error: {str(e)}")
+            return {"results": []}
+
+##############
+# FUNCTIONS #
+#############
+
+# Generate possible outcomes based on a given query using Groq and EXA APIs
 @app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
 @web_endpoint(method="POST")
 def generate_outcomes(query: Query):
@@ -73,25 +105,9 @@ def generate_outcomes(query: Query):
         print(f"Received query: {query.query}")
         
         # EXA API call
-        exa_url = "https://api.exa.ai/search"
-        exa_headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {EXA_API_KEY}"
-        }
-        exa_payload = {
-            "query": query.query,
-            "num_results": 5,
-            "use_autoprompt": True
-        }
-
-        try:
-            exa_response = requests.post(exa_url, json=exa_payload, headers=exa_headers)
-            exa_response.raise_for_status()
-            exa_data = exa_response.json()
-            print(f"EXA response: {exa_data}")
-        except requests.RequestException as e:
-            print(f"EXA API error: {str(e)}")
-            exa_data = {"results": []}
+        exa_client = Exa(api_key=EXA_API_KEY)
+        exa_data = exa_client.search(query.query)
+        print(f"EXA response: {exa_data}")
 
         # Process EXA results
         exa_context = ""
@@ -184,15 +200,16 @@ Main parts it's looking for:
 
 1. Current Outcome:
 The "current outcome" refers to the outcome that the function is currently processing. As the function reads through the text line by line, it's building up the details of one outcome at a time. This "current outcome" includes:
-The option number
-The title
-The description (which can span multiple lines)
-The probability
-Any hyperlinks
+• The option number
+• The title
+• The description (which can span multiple lines)
+• The probability
+• Any hyperlinks
 
 2. Starting a New Outcome:
 The function recognizes the start of a new outcome when it encounters a line that matches the pattern for an outcome title (a number, followed by a title, and a probability in parentheses). 
 """
+# Parse the Groq API response into structured Outcome objects
 def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]) -> List[Outcome]:
     # Initialize lists to store outcomes and current outcome details
     outcomes = []
@@ -239,6 +256,7 @@ def parse_outcomes_with_code_and_links(response_text: str, hyperlinks: List[str]
 
     return outcomes
 
+# Initialize the FastAPI app with CORS middleware and define the API endpoint
 @app.function(image=image)
 @web_endpoint()
 def fastapi_app():
