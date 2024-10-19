@@ -2,6 +2,9 @@
 
 /*
 MAIN CONTAINER COMPONENT FOR FLOWCHART FUNCTIONALITY
+
+The FlowChart component is the main container component for the flowchart functionality. It manages the overall state and orchestrates the user interaction flow. Here are its key responsibilities:
+
 1. It manages the overall state of the flowchart, including user interactions, data loading, and view switching.
 2. It handles user input for the initial situation and action.
 3. It manages the different views (outcomes, history, profile) and their respective components.
@@ -28,30 +31,6 @@ import FlowGraph from './FlowGraph';
 ////////////////
 // INTERFACES //
 ///////////////
-
-interface PopupNode {
-  probability: number;
-  title: string;
-  optionNumber: number;
-  content: string;
-}
-
-interface FlowChartProps {
-  initialSituation: string;
-  initialAction: string;
-  showChart: boolean;
-  onChartRendered: () => void;
-  updateNumberOfOutcomes: (count: number) => void;
-  user: { email: string };
-  updateTreeData: (newData: TreeNode) => void;
-  selectedFlowchart?: TreeNode | null;
-}
-
-interface Outcome {
-  title: string;
-  description: string;
-  probability: number;
-}
 
 type NodeType = 'situation' | 'action' | 'outcome';
 

@@ -1,5 +1,8 @@
 /*
 COMPONENT THAT RENDERS INTERACTIVE FLOWCHART:
+
+The FlowGraph component is responsible for rendering and managing the actual flowchart visualization.
+
 1. It visualizes a tree-like data structure representing situations, actions, and outcomes.
 2. It allows for dynamic generation of outcomes based on user input.
 3. It supports user interactions such as clicking, double-clicking, and dragging nodes.
