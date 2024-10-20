@@ -1,4 +1,4 @@
-# FUTURE
+# Prolly
 
 This project is an AI-powered application that generates outcomes based on user input. It uses the Groq API for natural language processing and is built with FastAPI and Modal for deployment.
 
@@ -54,7 +54,9 @@ This project is an AI-powered application that generates outcomes based on user 
 
 To run the application locally for development:
 
-`modal serve src/app/api/groq.py`
+```
+modal serve src/app/api/groq.py
+```
 
 This will start the FastAPI server using Modal, making it accessible at `http://localhost:8000` by default.
 
@@ -69,7 +71,6 @@ The application exposes a single endpoint:
 Example request:
 
 ```
-json
 {
 "prompt": "What are potential outcomes of climate change?"
 }
@@ -79,10 +80,16 @@ json
 
 This application is designed to be deployed using Modal. Refer to Modal's documentation for detailed deployment instructions.
 
-## Contributing
+## TODO
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Project Checklist
+
+- [ ] More outcomes
+- [ ] Longer, detailed node descriptions
+- [ ] Better probability weighting
+- [ ] Dragable nodes
+- [ ] More details about entire generated flowchart
 
 ## License
 
-[Specify your license here]
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
