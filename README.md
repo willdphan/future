@@ -9,56 +9,65 @@ This project is an AI-powered application that generates outcomes based on user 
 ├── src/
 │ └── app/
 │ └── api/
-│ └── groq.py
-├── requirements.txt (assumed)
-└── .env (assumed)
+│ └── prolly.py
 ```
 
 ## File Descriptions
 
 1. `README.md`: This file, containing information about the project, its structure, and how to set it up and use it.
 
-2. `src/app/api/groq.py`: The main application file containing:
+2. `src/app/api/prolly.py`: The main application file containing:
 
    - Configuration for the Groq API client
    - The `generate_outcomes` function that processes user input and generates outcomes
    - FastAPI app setup with CORS middleware
    - Endpoint definition for the `/generate-outcomes` route
 
-3. `requirements.txt` (assumed): Lists all Python dependencies required for the project.
-
-4. `.env` (assumed): Contains environment variables such as API keys and other configuration settings.
-
 ## Setup and Installation
 
 1. Clone the repository:
 
-   ```
-   git clone <repository-url>
-   cd <repository-name>
-   ```
+```
+git clone https://github.com/willdphan/future.git
+cd <repository-name>
+```
 
-2. Install dependencies:
+2. Install dependencies
 
-   ```
-   pip install -r requirements.txt
-   ```
+For Frontend:
+
+```
+npm install
+```
+
+For Backend:
+
+Modal will install these packages in the script of prolly.py
+
+```
+# install necessary packages
+image = (
+    Image.debian_slim()
+    .pip_install("fastapi", "uvicorn", "groq", "pydantic", "requests")
+)
+```
 
 3. Set up environment variables:
-   Create a `.env` file in the root directory and add your Groq API key:
-   ```
-   GROQ_API_KEY=your_api_key_here
-   ```
 
-## Running the Application
-
-To run the application locally for development:
+Create a `.env` file in the root directory and add your Groq API key:
 
 ```
-modal serve src/app/api/groq.py
+GROQ_API_KEY=your_api_key_here
 ```
 
-This will start the FastAPI server using Modal, making it accessible at `http://localhost:8000` by default.
+## Running the Application Locally
+
+We are using modal labs for deploying and running the FastAPI application. Create an account and create your env variables.
+Here's how you can create your secret keys in terminal:
+
+```
+modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
+```
 
 ## API Usage
 
@@ -78,11 +87,13 @@ Example request:
 
 ## Deployment
 
-This application is designed to be deployed using Modal. Refer to Modal's documentation for detailed deployment instructions.
+You can deploy this application. This will start the FastAPI server using Modal, making it accessible at `http://localhost:8000` by default.
+
+```
+modal deploy src/app/api/prolly.py
+```
 
 ## TODO
-
-## Project Checklist
 
 - [ ] More outcomes
 - [ ] Longer, detailed node descriptions

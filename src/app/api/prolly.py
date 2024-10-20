@@ -4,8 +4,6 @@
 # Deploy
 # Run: modal deploy src/app/api/groq.py
 
-# curl -X POST https://willdphan--fastapi-groq-api-generate-outcomes.modal.run -H "Content-Type: application/json" -d '{"query": "test query"}'
-
 import os
 import re
 import traceback
