@@ -1,4 +1,12 @@
 
+/* 
+TreeNode interface: Defines the structure of each node in the tree.
+NodeType: A type representing different kinds of nodes (situation, action, outcome).
+findNodeById: Searches the tree for a node with a specific ID.
+getNodePath: Finds the path to a node with a given ID.
+getNodeByPath: Retrieves a node given a path in the tree.
+*/
+
 interface TreeNode {
     id: string;
     content: string;
