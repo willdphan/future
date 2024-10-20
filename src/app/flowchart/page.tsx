@@ -1,5 +1,7 @@
 'use client';
 
+// TODO: we don't need the clow chart to accept user data, get rid of this props in order for being able to render flowchart every time while logged in.
+
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -20,22 +22,21 @@ export default function FlowchartPage() {
     const checkUser = async () => {
       try {
         console.log('Checking user session...');
-        // Add a small delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        console.log('Session:', session); // log the session
+        console.log('Session:', session);
         if (session && session.user) {
-          console.log('User found:', session.user); // log the user
+          console.log('User found:', session.user);
           setUser(session.user);
 
-          // Fetch additional user data
-          const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          // Fetch user data
+          const { data, error } = await supabase.from('users').select('*').eq('id', session.user.id).single();
 
           if (error) {
             console.error('Error fetching user data:', error);
           } else {
+            console.log('User data fetched:', data);
             setUserData(data);
           }
 
@@ -51,11 +52,6 @@ export default function FlowchartPage() {
     };
 
     checkUser();
-
-    if (searchParams.get('login') === 'success') {
-      console.log('Login success detected, refreshing...');
-      router.refresh();
-    }
   }, [router, supabase, searchParams]);
 
   if (isLoading) {
@@ -74,5 +70,20 @@ export default function FlowchartPage() {
     );
   }
 
-  return user ? <FlowChart user={user} userData={userData} /> : null;
+  console.log('About to render FlowChart', { user, userData });
+  return user ? (
+    <FlowChart user={user} userData={userData} />
+  ) : (
+    <div className='flex min-h-screen items-center justify-center bg-[#E8E4DB] font-mono text-lg text-black'>
+      No user found. Please{' '}
+      <button onClick={() => router.push('/signup')} className='ml-2 text-blue-500 underline'>
+        sign up
+      </button>{' '}
+      or{' '}
+      <button onClick={() => router.push('/login')} className='ml-2 text-blue-500 underline'>
+        log in
+      </button>
+      .
+    </div>
+  );
 }

@@ -3,12 +3,11 @@
 // Defines server-side authentication functions that interact with Supabase 
 // to handle OAuth, email sign-in, and sign-out processes.
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 import { getURL } from '@/utils/get-url';
-
 
 export async function signInWithOAuth(provider: 'github' | 'google'): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
@@ -16,7 +15,8 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${getURL()}/auth/callback`,
+      // url
+      redirectTo: getURL('/auth/callback'),
     },
   });
 
@@ -28,14 +28,13 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
   return redirect(data.url);
 }
 
-
 export async function signInWithEmail(email: string): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: getURL('/auth/callback?redirect=/flowchart'),
+      emailRedirectTo: getURL('/auth/callback'),
     },
   });
 
@@ -47,23 +46,14 @@ export async function signInWithEmail(email: string): Promise<ActionResponse> {
   return { data: null, error: null };
 }
 
-export async function signOut() {
+export async function signOut(): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    console.error('Error signing out:', error);
-    return { success: false, error: error.message };
+    console.error(error);
+    return { data: null, error: error };
   }
 
-  // Clear all cookies
-  const cookieStore = cookies();
-  cookieStore.getAll().forEach(cookie => {
-    cookieStore.delete(cookie.name);
-  });
-
-  // Clear Supabase-specific cookies
-  cookieStore.delete('sb-access-token');
-
-  redirect('/signup')
+  return { data: null, error: null };
 }

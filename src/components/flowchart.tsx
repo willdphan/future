@@ -19,6 +19,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { User } from '@supabase/supabase-js';
 
 // Local imports
 import withAuth from '@/utils/withAuth';
@@ -46,7 +47,8 @@ interface TreeNode {
 }
 
 interface FlowChartPageProps {
-  user: { email: string };
+  user: User;
+  userData: any;
 }
 
 // 3. Constants
@@ -60,7 +62,7 @@ const VERTICAL_SPACING = 150;
 // FLOWCHART PAGE ////
 //////////////////////
 
-const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
+const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(['', '']);
   const [showChart, setShowChart] = useState(false);
@@ -305,6 +307,10 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
       return newZoom;
     });
   }, []);
+
+  console.log('FlowChart component rendered');
+  console.log('User:', user);
+  console.log('UserData:', userData);
 
   return (
     <>
