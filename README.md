@@ -52,15 +52,7 @@ image = (
 )
 ```
 
-3. Set up environment variables:
-
-Create a `.env` file in the root directory and add your Groq API key:
-
-```
-GROQ_API_KEY=your_api_key_here
-```
-
-## Running the Application Locally
+## Running the Application
 
 We are using modal labs for deploying and running the FastAPI application. Create an account and create your env variables.
 Here's how you can create your secret keys in terminal:
