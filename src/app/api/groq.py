@@ -1,8 +1,6 @@
 # Create Keys
 # modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
 
-# modal secret update my-api-keys GROQ_API_KEY=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 EXA_API_KEY=af5bcded-d8cd-4f27-938e-003b8a359e08
-
 # Deploy
 # Run: modal deploy src/app/api/groq.py
 

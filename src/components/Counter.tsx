@@ -1,10 +1,6 @@
 import React from 'react';
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 
-interface CounterProps {
-  value: number;
-}
-
 const Counter: React.FC<CounterProps> = ({ value }) => {
   const count = useMotionValue(0);
   const rounded = useTransform(count, latest => Math.round(latest));

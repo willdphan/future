@@ -19,50 +19,31 @@ import FullScreenPopup from './FullScreenPopup';
 import { motion } from 'framer-motion'; // Add this import
 import { PieGraph } from './PieGraph'; // Make sure this import path is correct
 
-interface FlowGraphProps {
-  initialSituation: string;
-  initialAction: string;
-  showChart: boolean;
-  onChartRendered: () => void;
-  updateNumberOfOutcomes: (count: number) => void;
-  user: { email: string };
-  updateTreeData: (newData: TreeNode) => void;
-  selectedFlowchart?: TreeNode | null;
-  zoom: Number;
-}
-
-type NodeType = 'situation' | 'action' | 'outcome';
-
-interface TreeNode {
-  id: string;
-  content: string;
-  position: { x: number; y: number };
-  type: NodeType;
-  outcomes: TreeNode[];
-  probability?: number;
-  title?: string;
-  optionNumber?: number;
-}
-
-interface PopupNode {
-  probability: number;
-  title: string;
-  optionNumber: number;
-  content: string;
-}
-
-interface PieGraphProps {
-  probability: number;
-  index: number;
-  isSelected: boolean;
-}
-
-// 3. Constants
+// CONSTANTS
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 100;
 const INITIAL_HORIZONTAL_SPACING = 300;
 const HORIZONTAL_SPACING = 550;
 const VERTICAL_SPACING = 150;
+
+// MIN/MAX COORDS
+// Add this function near the top of the component, after the state declarations
+const getMinMaxCoordinates = (node: TreeNode) => {
+  let minX = node.position.x;
+  let minY = node.position.y;
+  let maxX = node.position.x;
+  let maxY = node.position.y;
+  if (node.outcomes) {
+    node.outcomes.forEach((outcome: TreeNode) => {
+      const { minX: childMinX, minY: childMinY, maxX: childMaxX, maxY: childMaxY } = getMinMaxCoordinates(outcome);
+      minX = Math.min(minX, childMinX);
+      minY = Math.min(minY, childMinY);
+      maxX = Math.max(maxX, childMaxX);
+      maxY = Math.max(maxY, childMaxY);
+    });
+  }
+  return { minX, minY, maxX, maxY };
+};
 
 const FlowGraph: React.FC<FlowGraphProps> = ({
   initialSituation,
@@ -74,18 +55,6 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
   selectedFlowchart,
   zoom,
 }) => {
-  useEffect(() => {
-    if (selectedFlowchart) {
-      setTreeData(selectedFlowchart);
-      updateTreeData(selectedFlowchart);
-      onChartRendered();
-    } else if (showChart) {
-      generateInitialFlowchart(initialSituation, initialAction).then(() => {
-        onChartRendered();
-      });
-    }
-  }, [showChart, initialSituation, initialAction, onChartRendered, selectedFlowchart]);
-
   const [treeData, setTreeData] = useState<TreeNode>({
     id: 'start',
     content: '',
@@ -93,14 +62,30 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     type: 'action',
     outcomes: [], // This should now be correctly typed
   });
-
   const [selectedPath, setSelectedPath] = useState<number[]>([]);
   const [editingNode, setEditingNode] = useState('start');
-  const [selectedNodeDetail, setSelectedNodeDetail] = useState(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [popupNode, setPopupNode] = useState<PopupNode | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
 
+  // RESPONSIBLE FOR INITIALIZING/UPDATING FLOWCHART
+  // based on certain conditions
+  // If selectedFlowchart exists (i.e., a user has selected a pre-existing flowchart), it updates the local state (setTreeData) and the parent component's state (updateTreeData) with this flowchart.
+  // It then calls onChartRendered() to signal that the chart has been rendered.
+  useEffect(() => {
+    if (selectedFlowchart) {
+      setTreeData(selectedFlowchart);
+      updateTreeData(selectedFlowchart);
+      onChartRendered();
+    // when a new chart needs to be generated, calls onChartRendered() to signal completion.
+    } else if (showChart) {
+      generateInitialFlowchart(initialSituation, initialAction).then(() => {
+        onChartRendered();
+      });
+    }
+  }, [showChart, initialSituation, initialAction, onChartRendered, selectedFlowchart, updateTreeData]);
+
+  // used to generate outcomes for the given action
   const generateOutcomes = useCallback(
     async (parentX: number, parentY: number, action: string, isInitial: boolean = false): Promise<TreeNode[]> => {
       console.log('Generating outcomes for action:', action); // Add this line
@@ -134,7 +119,7 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
             y: startY + i * VERTICAL_SPACING,
           },
           type: 'outcome',
-          outcomes: [], // This should now be correctly typed
+          outcomes: [], 
         }));
 
         updateNumberOfOutcomes(newOutcomes.length);
@@ -150,6 +135,9 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     [updateNumberOfOutcomes, VERTICAL_SPACING, HORIZONTAL_SPACING]
   );
 
+  // GENERATES INITIAL FLOWCHART
+  // first action to call the generateOutcomes function
+  // done to start flowchart directly on side of screen
   const generateInitialFlowchart = useCallback(
     async (situation: string, action: string) => {
       const outcomes = await generateOutcomes(0, 0, action, true);
@@ -185,14 +173,8 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     [generateOutcomes, VERTICAL_SPACING, INITIAL_HORIZONTAL_SPACING, updateTreeData]
   ); // Add updateTreeData to dependencies
 
-  useEffect(() => {
-    if (showChart) {
-      generateInitialFlowchart(initialSituation, initialAction).then(() => {
-        onChartRendered();
-      });
-    }
-  }, [showChart, initialSituation, initialAction, onChartRendered]);
-
+  // HANDLES NODE SELECTION AND HIGHLIGHTS PATH
+  // if path is not null, it sets path as selected path using selectedPath(path)
   const handleNodeClick = useCallback(
     (nodeId: string, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -210,6 +192,7 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     [treeData]
   );
 
+  // TRIGGERED WHEN USER DOUBLE CLICKS ON NODE, ALLOWS FOR ADDITIONAL ACTION TO TAKE PLACE
   const handleNodeDoubleClick = useCallback(
     (nodeId: string, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -257,47 +240,9 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     [treeData, HORIZONTAL_SPACING]
   );
 
-  const handleExpandClick = useCallback(
-    (nodeId: string, event: React.MouseEvent) => {
-      event.stopPropagation();
-      const clickedNode = findNodeById(treeData, nodeId);
-      if (clickedNode && clickedNode.type === 'outcome') {
-        const popupData: PopupNode = {
-          probability: clickedNode.probability ?? 0, // Provide a default value if undefined
-          title: clickedNode.title ?? '', // Provide a default value if undefined
-          optionNumber: clickedNode.optionNumber ?? 0, // Provide a default value if undefined
-          content: clickedNode.content,
-        };
-        setPopupNode(popupData);
-      }
-    },
-    [treeData]
-  );
-
-  const handleNodeDragStart = useCallback(
-    (e: React.MouseEvent, nodeId: string) => {
-      e.stopPropagation();
-      const node = findNodeById(treeData, nodeId);
-    },
-    [treeData]
-  );
-
-  const handleNodeDrag = useCallback(
-    (e: MouseEvent) => {
-      setTreeData((prevTree) => {
-        const newTree = JSON.parse(JSON.stringify(prevTree));
-        const updateNodePosition = (node: TreeNode): boolean => {
-          return node.outcomes.some(updateNodePosition);
-        };
-
-        updateNodePosition(newTree);
-        updateTreeData(newTree); // Add this line
-        return newTree;
-      });
-    },
-    [updateTreeData]
-  );
-
+  // FINDS NODE IN TREE, UPDATE PARENT TREE DATA, UPDATE PARENT COMPONENT DATA, CLEAR STATE
+  // called when a user submits content for an action node
+  // calls teh generateOutcomes function
   const handleActionSubmit = useCallback(
     async (nodeId: string, content: string) => {
       try {
@@ -328,6 +273,25 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     [treeData, generateOutcomes, updateTreeData]
   );
 
+  // HANDLES EXPAND BUTTON CLICK, AKA WHENEVER USER PRESSES + ON NODE
+  const handleExpandClick = useCallback(
+    (nodeId: string, event: React.MouseEvent) => {
+      event.stopPropagation();
+      const clickedNode = findNodeById(treeData, nodeId);
+      if (clickedNode && clickedNode.type === 'outcome') {
+        const popupData: PopupNode = {
+          probability: clickedNode.probability ?? 0,
+          title: clickedNode.title ?? '',
+          optionNumber: clickedNode.optionNumber ?? 0,
+          content: clickedNode.content,
+        };
+        setPopupNode(popupData);
+      }
+    },
+    [treeData]
+  );
+
+  // RENDERS INDIVIDUAL NODES
   const renderNode = (node: TreeNode, depth: number = 0, path: number[] = []): React.ReactNode => {
     if (!node) return null;
     const hasOutcomes = node.outcomes && node.outcomes.length > 0;
@@ -350,6 +314,7 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
         <div key={node.id}>
           {hasOutcomes && (
             <>
+            {/* serves as canvas */}
               <svg
                 className='absolute'
                 style={{
@@ -497,38 +462,21 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
     );
   };
 
-  const getMinMaxCoordinates = (node: TreeNode) => {
-    let minX = node.position.x;
-    let minY = node.position.y;
-    let maxX = node.position.x;
-    let maxY = node.position.y;
-    if (node.outcomes) {
-      node.outcomes.forEach((outcome: TreeNode) => {
-        const { minX: childMinX, minY: childMinY, maxX: childMaxX, maxY: childMaxY } = getMinMaxCoordinates(outcome);
-        minX = Math.min(minX, childMinX);
-        minY = Math.min(minY, childMinY);
-        maxX = Math.max(maxX, childMaxX);
-        maxY = Math.max(maxY, childMaxY);
-      });
-    }
-    return { minX, minY, maxX, maxY };
-  };
-
   const { minX, minY, maxX, maxY } = getMinMaxCoordinates(treeData);
-
   const containerWidth = maxX - minX + NODE_WIDTH + HORIZONTAL_SPACING;
   const containerHeight = maxY - minY + NODE_HEIGHT + VERTICAL_SPACING;
 
-  const containerStyle = {
+  // css styling
+  const containerStyle: React.CSSProperties = {
     width: `${containerWidth}px`,
     height: `${containerHeight}px`,
     transform: `scale(${zoom})`,
     transformOrigin: 'top left',
     transition: 'transform 0.3s ease-out',
-    padding: '300px', // Increase padding to ensure nodes near the edges are not cut off
-    position: 'absolute', // Ensure absolute positioning
-    top: `${-minY + 100}px`, // Adjust top based on minimum Y coordinate with extra space
-    left: `${-minX + 100}px`, // Adjust left based on minimum X coordinate with extra space
+    padding: '300px',
+    position: 'absolute',
+    top: `${-minY + 100}px`,
+    left: `${-minX + 100}px`,
   };
 
   return (
@@ -544,4 +492,4 @@ const FlowGraph: React.FC<FlowGraphProps> = ({
   );
 };
 
-export default FlowGraph; // Make sure to export the component
+export default FlowGraph; 

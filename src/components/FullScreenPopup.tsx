@@ -12,18 +12,6 @@ The popup displays the following information from the node prop:
 
 import DOMPurify from 'dompurify';
 
-interface PopupNode {
-  probability: number;
-  title: string;
-  optionNumber: number;
-  content: string;
-}
-
-interface FullScreenPopupProps {
-  node: PopupNode;
-  onClose: () => void;
-}
-
 export default function FullScreenPopup({ node, onClose }: FullScreenPopupProps) {
   const createMarkup = (html: string) => ({ __html: DOMPurify.sanitize(html) });
 

@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-interface Flowchart {
-  id: string;
-  user_email: string;
-  tree_data: any;
-  created_at: string;
-}
-
-interface HistoryProps {
-  onLoadFlowchart: (id: string) => Promise<void>;
-}
-
 const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
   const [flowcharts, setFlowcharts] = useState<Flowchart[]>([]);
   const [loading, setLoading] = useState(true);

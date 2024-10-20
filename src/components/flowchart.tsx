@@ -14,12 +14,10 @@ The FlowChart component is the main container component for the flowchart functi
 
 // 1. Imports
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import DOMPurify from 'dompurify';
 import { AnimatePresence, motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { User } from '@supabase/supabase-js';
 
 // Local imports
 import withAuth from '@/utils/withAuth';
@@ -29,40 +27,11 @@ import LoadingPage from './Loading';
 import LogoutButton from './LogoutButton';
 import FlowGraph from './FlowGraph';
 
-////////////////
-// INTERFACES //
-///////////////
-
-type NodeType = 'situation' | 'action' | 'outcome';
-
-interface TreeNode {
-  id: string;
-  content: string;
-  position: { x: number; y: number };
-  type: NodeType;
-  outcomes: TreeNode[];
-  probability?: number;
-  title?: string;
-  optionNumber?: number;
-}
-
-interface FlowChartPageProps {
-  user: User;
-  userData: any;
-}
-
-// 3. Constants
-const NODE_WIDTH = 200;
-const NODE_HEIGHT = 100;
-const INITIAL_HORIZONTAL_SPACING = 300;
-const HORIZONTAL_SPACING = 550;
-const VERTICAL_SPACING = 150;
-
 //////////////////////
 // FLOWCHART PAGE ////
 //////////////////////
 
-const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
+const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(['', '']);
   const [showChart, setShowChart] = useState(false);
@@ -74,6 +43,7 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
   const isGeneratingRef = useRef(false);
   const abortControllerRef = useRef(new AbortController());
   const [treeData, setTreeData] = useState<TreeNode>(); // Add this line
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -144,8 +114,6 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
     newAnswers[step] = e.target.value;
     setAnswers(newAnswers);
   };
-
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputSubmit = async () => {
     if (step < questions.length - 1) {
@@ -246,8 +214,6 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
 
   const [activeView, setActiveView] = useState<'profile' | 'outcomes' | 'history'>('outcomes');
 
-  const [skippedQuestions, setSkippedQuestions] = useState(false);
-
   const handleSkippedQuestions = () => {
     setIsGenerating(true);
     setShowSpline(true);
@@ -310,7 +276,6 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user, userData }) => {
 
   console.log('FlowChart component rendered');
   console.log('User:', user);
-  console.log('UserData:', userData);
 
   return (
     <>

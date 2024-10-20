@@ -1,11 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-interface ComponentProps {
-  probability: number;
-  index: number;
-  isSelected: boolean;
-}
-
 export const PieGraph: React.FC<ComponentProps> = ({ probability, index, isSelected }) => {
   const data = [
     { name: 'Probability', value: probability },
