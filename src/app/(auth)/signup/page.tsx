@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import LoadingPage from 'src/components/Loading';
+
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 import { signInWithEmail, signInWithOAuth } from '../auth-actions';
