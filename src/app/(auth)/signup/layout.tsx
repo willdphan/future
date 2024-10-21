@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import type { Metadata } from 'next';
 
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/app/components/ui/toaster';
 import { Analytics } from '@vercel/analytics/react';
 
 import '@/styles/globals.css';

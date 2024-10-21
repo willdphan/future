@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { toast } from '@/components/ui/use-toast';
+import { signOut } from '../(auth)/auth-actions';
 
-import { signOut } from '../app/(auth)/auth-actions';
+import { toast } from './ui/use-toast';
 
 export default function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);

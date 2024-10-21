@@ -7,10 +7,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IoLogoGoogle } from 'react-icons/io5';
 
-import { toast } from '@/src/components/ui/use-toast';
-import { ActionResponse } from '@/src/types/action-response';
+import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+import { Toast } from '../components/ui/toast';
 
 export function AuthUI({
   mode,

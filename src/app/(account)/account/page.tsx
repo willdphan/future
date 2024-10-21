@@ -2,7 +2,7 @@ import { PropsWithChildren, ReactNode } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';
 import { PricingCard } from '@/features/pricing/components/price-card';

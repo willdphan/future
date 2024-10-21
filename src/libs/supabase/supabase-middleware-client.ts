@@ -14,7 +14,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { getEnvVar } from '@/src/utils/get-env-var';
+import { getEnvVar } from '@/utils/get-env-var';
 import { type CookieOptions, createServerClient } from '@supabase/ssr';
 
 export async function supabaseMiddlewareClient(req: NextRequest) {
