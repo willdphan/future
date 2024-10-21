@@ -16,7 +16,7 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
     provider,
     options: {
       // url
-      redirectTo: getURL('/auth/callback'),
+      redirectTo: getURL('/flowchart'),
     },
   });
 
@@ -34,7 +34,8 @@ export async function signInWithEmail(email: string): Promise<ActionResponse> {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: getURL('/auth/callback'),
+      // Change the redirect URL to /flowchart
+      emailRedirectTo: getURL('/flowchart'),
     },
   });
 
