@@ -27,12 +27,13 @@ export function AuthUI({
   const [password, setPassword] = useState('');
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    const form = event.target as HTMLFormElement;
-    const email = form['email'].value;
-    const response = await signInWithEmail(email);
+    event.preventDefault(); // Prevent the default form submission
+    setPending(true); // Set loading state to true
 
+    // Instead of accessing the form directly, use the email state
+    const response = await signInWithEmail(email); // Use the email state directly
+
+    // Check for errors in the response
     if (response?.error) {
       toast({
         variant: 'destructive',
@@ -44,8 +45,8 @@ export function AuthUI({
       });
     }
 
-    form.reset();
-    setPending(false);
+    // Reset the form fields if needed
+    setPending(false); // Set loading state back to false
   }
 
   async function handleOAuthClick(provider: 'google') {
@@ -81,10 +82,11 @@ export function AuthUI({
             <div className='relative flex items-center'>
               <input
                 type='email'
+                name='email' // Ensure this matches what you're trying to access
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)} // Update state on change
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm  text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter email'
               />
               {/* Email icon SVG */}
@@ -99,7 +101,7 @@ export function AuthUI({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter password'
               />
               {/* Password icon SVG */}
