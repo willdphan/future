@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+import LoadingPage from '@/components/Loading';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import { signInWithEmail, signInWithOAuth } from '../auth-actions';
 import { AuthUI } from '../auth-ui';
-import LoadingPage from '@/components/Loading';
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState(true);

@@ -2,6 +2,7 @@
 
 // TODO: we don't need the clow chart to accept user data, get rid of this props in order for being able to render flowchart every time while logged in.
 
+import React, { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,7 +11,7 @@ import FlowChart from '@/components/FlowChart';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { User } from '@supabase/supabase-js';
 
-export default function FlowchartPage() {
+const FlowchartPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any>(null);
@@ -86,4 +87,13 @@ export default function FlowchartPage() {
       .
     </div>
   );
-}
+};
+
+// Wrap your component in Suspense
+const FlowchartWrapper = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <FlowchartPage />
+  </Suspense>
+);
+
+export default FlowchartWrapper;

@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation';
 import { getOrCreateCustomer } from '@/features/account/controllers/get-or-create-customer';
 import { getSession } from '@/features/account/controllers/get-session';
 import { Price } from '@/features/pricing/types';
-import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 import { getURL } from '@/utils/get-url';
 
 export async function createCheckoutAction({ price }: { price: Price }) {

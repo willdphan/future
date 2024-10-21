@@ -12,11 +12,13 @@ The FlowGraph component is responsible for rendering and managing the actual flo
 7. It's responsive to zoom levels and manages its own positioning within a container.
 */
 
-import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import LoadingPage from './Loading';
-import FullScreenPopup from './FullScreenPopup';
 import { motion } from 'framer-motion'; // Add this import
+
+import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
+
+import FullScreenPopup from './FullScreenPopup';
+import LoadingPage from './Loading';
 import { PieGraph } from './PieGraph'; // Make sure this import path is correct
 
 // CONSTANTS

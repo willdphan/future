@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
 import Hero from '@/components/Hero';
 import HeroSpline from '@/components/HeroSpline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import styles from '@/styles/HomePage.module.css';
 
 export default function HomePage() {

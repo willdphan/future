@@ -16,16 +16,17 @@ The FlowChart component is the main container component for the flowchart functi
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
-import Spline from '@splinetool/react-spline';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 // Local imports
 import withAuth from '@/utils/withAuth';
+import Spline from '@splinetool/react-spline';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import Counter from './Counter';
+import FlowGraph from './FlowGraph';
 import History from './History';
 import LoadingPage from './Loading';
 import LogoutButton from './LogoutButton';
-import FlowGraph from './FlowGraph';
 
 //////////////////////
 // FLOWCHART PAGE ////

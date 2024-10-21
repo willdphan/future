@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
