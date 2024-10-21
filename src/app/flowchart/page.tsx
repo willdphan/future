@@ -72,7 +72,7 @@ export default function FlowchartPage() {
 
   console.log('About to render FlowChart', { user, userData });
   return user ? (
-    <FlowChart user={user}  />
+    <FlowChart user={user} />
   ) : (
     <div className='flex min-h-screen items-center justify-center bg-[#E8E4DB] font-mono text-lg text-black'>
       No user found. Please{' '}
