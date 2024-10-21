@@ -22,14 +22,14 @@ export function AuthUI({
   signInWithEmail: (email: string) => Promise<ActionResponse>;
 }) {
   const [pending, setPending] = useState(false);
-  const [emailFormOpen, setEmailFormOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
-
-    // Use the email state instead of accessing the form element
-    // usestate with email
+    const form = event.target as HTMLFormElement;
+    const email = form['email'].value;
     const response = await signInWithEmail(email);
 
     if (response?.error) {
@@ -43,16 +43,9 @@ export function AuthUI({
       });
     }
 
-    // Reset the email state instead of the form
-    setEmail('');
+    form.reset();
     setPending(false);
   }
-
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const supabase = createClientComponentClient();
 
   async function handleOAuthClick(provider: 'google') {
     setPending(true);
