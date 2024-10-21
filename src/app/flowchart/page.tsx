@@ -6,8 +6,8 @@ import React, { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import FlowChart from 'src/components/FlowChart';
 
+import FlowChart from '@/components/FlowChart';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { User } from '@supabase/supabase-js';
 
