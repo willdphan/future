@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import Hero from '@/components/Hero';
+import Hero from 'src/components/Hero';
 import HeroSpline from '@/components/HeroSpline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
