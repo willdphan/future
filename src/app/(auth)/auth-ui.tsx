@@ -11,7 +11,7 @@ import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-import { Toast } from '../components/ui/toast';
+import { toast } from '../components/ui/use-toast';
 
 export function AuthUI({
   mode,
