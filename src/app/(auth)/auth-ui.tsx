@@ -35,11 +35,8 @@ export function AuthUI({
 
     let response;
     if (mode === 'signup') {
-      // Use signUp for new users
-      response = await supabase.auth.signUp({
-        email: email,
-        password: password, // Ensure you include the password for sign-up
-      });
+      // Use signInWithEmail for passwordless sign-up
+      response = await signInWithEmail(email);
     } else {
       // Use signIn for existing users
       response = await signInWithEmail(email);
@@ -102,7 +99,7 @@ export function AuthUI({
         <form onSubmit={handleEmailSubmit} className='w-full max-w-md'>
           <div className='mb-6'>
             <h3 className='font-man text-3xl font-extrabold text-gray-800 '>Sign Up</h3>
-            <p className='text-md mt-4 font-man text-gray-800'>Or login with your email.</p>
+            <p className='text-md mt-4 font-man text-gray-800'>Continue with your email.</p>
           </div>
 
           <div className='mb-4'>
@@ -121,7 +118,7 @@ export function AuthUI({
             </div>
           </div>
 
-          <div className='mb-4'>
+          {/* <div className='mb-4'>
             <label className='mb-2 block font-man text-sm text-black'>Password</label>
             <div className='relative flex items-center'>
               <input
@@ -132,9 +129,9 @@ export function AuthUI({
                 className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter password'
               />
-              {/* Password icon SVG */}
+             
             </div>
-          </div>
+          </div> */}
           {/* 
           <div className='mb-4 flex items-center justify-between py-[0.5] font-man'>
             <div className='flex items-center'>
