@@ -36,30 +36,36 @@ export function AuthUI({
     console.log('Email submitted:', email); // Log the submitted email
 
     let response;
-    if (mode === 'signup') {
-      // Use signInWithEmail for passwordless sign-up
-      response = await signInWithEmail(email);
-    } else {
-      // Use signIn for existing users
-      response = await signInWithEmail(email);
-    }
+    try {
+      if (mode === 'signup') {
+        response = await signInWithEmail(email);
+      } else {
+        response = await signInWithEmail(email);
+      }
 
-    if (response?.error) {
-      console.error('Sign-up error:', response.error); // Log the error
+      if (response?.error) {
+        console.error('Sign-up error:', response.error); // Log the error
+        toast({
+          variant: 'destructive',
+          description: response.error.message, // Show the error message
+          className: 'font-man',
+        });
+      } else {
+        toast({
+          description: `To continue, click the link in the email sent to: ${email}`,
+          className: 'font-man',
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error); // Log unexpected errors
       toast({
         variant: 'destructive',
-        description: response.error.message, // Show the error message
-        className: 'font-man',
+        description: 'An unexpected error occurred. Please try again.',
       });
-    } else {
-      toast({
-        description: `To continue, click the link in the email sent to: ${email}`,
-        className: 'font-man',
-      });
+    } finally {
+      form.reset();
+      setPending(false);
     }
-
-    form.reset();
-    setPending(false);
   }
 
   async function handleOAuthClick(provider: 'google' | 'github') {
