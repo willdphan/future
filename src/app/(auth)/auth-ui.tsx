@@ -85,11 +85,10 @@ export function AuthUI({
             <div className='relative flex items-center'>
               <input
                 type='email'
-                name='email' // Ensure this matches what you're trying to access
                 value={email}
-                onChange={(e) => setEmail(e.target.value)} // Update state on change
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm  text-gray-800 focus:bg-transparent'
                 placeholder='Enter email'
               />
               {/* Email icon SVG */}
@@ -104,28 +103,28 @@ export function AuthUI({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter password'
               />
               {/* Password icon SVG */}
             </div>
           </div>
 
-          <div className='mb-2 flex items-center justify-between py-[0.5] font-man'>
+          <div className='mb-4 flex items-center justify-between py-[0.5] font-man'>
             <div className='flex items-center'>
-              {/* <input
+              <input
                 id='remember-me'
                 name='remember-me'
                 type='checkbox'
                 className='h-4 w-4 shrink-0  border-gray-300 '
-              /> */}
-              {/* <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
+              />
+              <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
                 Remember me
-              </label> */}
+              </label>
             </div>
-            {/* <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
+            <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
               Forgot Password?
-            </a> */}
+            </a>
           </div>
 
           <button
@@ -151,6 +150,17 @@ export function AuthUI({
             <IoLogoGoogle size={20} />
             Continue with Google
           </button>
+
+          {/* <button
+            type="button"
+            onClick={() => handleOAuthClick('github')}
+            disabled={pending}
+            className="w-full flex items-center justify-center gap-4 py-3 px-6 text-sm tracking-wide text-gray-800 border border-gray-300 rounded-md bg-gray-50 hover:bg-gray-100 focus:outline-none"
+          >
+            <IoLogoGithub size={20} />
+            Continue with GitHub
+          </button> */}
+
           {mode === 'signup' && (
             <p className='mt-4 text-sm text-gray-600'>
               By clicking continue, you agree to our{' '}

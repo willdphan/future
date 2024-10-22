@@ -56,6 +56,13 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
     }
   }, []);
 
+  const questions = ['Set the scene', 'Your Move.'];
+
+  const placeholders = [
+    'Describe your current situation or environment. This context helps us tailor our assistance.',
+    "Given your situation, what's the first step or course of action you plan to take?",
+  ];
+
   const [selectedFlowchart, setSelectedFlowchart] = useState<TreeNode | null>(null);
 
   const supabase = createClientComponentClient();
@@ -102,13 +109,6 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
       console.error('Error loading flowchart:', error);
     }
   };
-
-  const questions = ['Set the scene', 'Your Move.'];
-
-  const placeholders = [
-    'Describe your current situation or environment. This context helps us tailor our assistance.',
-    "Given your situation, what's the first step or course of action you plan to take?",
-  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newAnswers = [...answers];

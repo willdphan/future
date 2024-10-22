@@ -9,13 +9,14 @@ import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-clie
 import { ActionResponse } from '@/types/action-response';
 import { getURL } from '@/utils/get-url';
 
-export async function signInWithOAuth(provider: 'google'): Promise<ActionResponse> {
+export async function signInWithOAuth(provider: 'github' | 'google'): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${getURL()}/auth/callback`,
+      // url
+      redirectTo: getURL('/auth/callback'),
     },
   });
 
