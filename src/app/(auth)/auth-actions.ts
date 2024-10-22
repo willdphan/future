@@ -15,8 +15,7 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      // url
-      redirectTo: `/flowchart`,
+      redirectTo: `${getURL()}/auth/callback`,
     },
   });
 
