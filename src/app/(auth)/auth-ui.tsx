@@ -33,6 +33,8 @@ export function AuthUI({
     const form = event.target as HTMLFormElement;
     const email = form['email'].value;
 
+    console.log('Email submitted:', email); // Log the submitted email
+
     let response;
     if (mode === 'signup') {
       // Use signInWithEmail for passwordless sign-up
