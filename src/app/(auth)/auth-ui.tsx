@@ -38,10 +38,12 @@ export function AuthUI({
       toast({
         variant: 'destructive',
         description: 'An error occurred while authenticating. Please try again.',
+        className: 'font-man', // Ensure consistent font styling
       });
     } else {
       toast({
         description: `To continue, click the link in the email sent to: ${email}`,
+        className: 'font-man', // Ensure consistent font styling
       });
     }
 
