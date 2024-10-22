@@ -46,15 +46,16 @@ export function AuthUI({
     }
 
     if (response?.error) {
+      console.error('Sign-up error:', response.error); // Log the error
       toast({
         variant: 'destructive',
-        description: 'An error occurred while authenticating. Please try again.',
-        className: 'font-man', // Ensure consistent font styling
+        description: response.error.message, // Show the error message
+        className: 'font-man',
       });
     } else {
       toast({
         description: `To continue, click the link in the email sent to: ${email}`,
-        className: 'font-man', // Ensure consistent font styling
+        className: 'font-man',
       });
     }
 
