@@ -16,7 +16,7 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
     provider,
     options: {
       // url
-      redirectTo: `${getURL()}/flowchart`,
+      redirectTo: `/flowchart`,
     },
   });
 

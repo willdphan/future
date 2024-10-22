@@ -25,6 +25,7 @@ export function AuthUI({
   const [pending, setPending] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const supabase = createClientComponentClient();
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); // Prevent the default form submission
