@@ -32,7 +32,18 @@ export function AuthUI({
     setPending(true);
     const form = event.target as HTMLFormElement;
     const email = form['email'].value;
-    const response = await signInWithEmail(email);
+
+    let response;
+    if (mode === 'signup') {
+      // Use signUp for new users
+      response = await supabase.auth.signUp({
+        email: email,
+        password: password, // Ensure you include the password for sign-up
+      });
+    } else {
+      // Use signIn for existing users
+      response = await signInWithEmail(email);
+    }
 
     if (response?.error) {
       toast({
