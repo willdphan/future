@@ -23,34 +23,37 @@ export function AuthUI({
   signInWithEmail: (email: string) => Promise<ActionResponse>;
 }) {
   const [pending, setPending] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const supabase = createClientComponentClient();
+  const [emailFormOpen, setEmailFormOpen] = useState(false);
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); // Prevent the default form submission
-    setPending(true); // Set loading state to true
+    event.preventDefault();
+    setPending(true);
 
-    // Instead of accessing the form directly, use the email state
-    const response = await signInWithEmail(email); // Use the email state directly
+    // Use the email state instead of accessing the form element
+    // usestate with email
+    const response = await signInWithEmail(email);
 
-    // Check for errors in the response
     if (response?.error) {
       toast({
         variant: 'destructive',
         description: 'An error occurred while authenticating. Please try again.',
-        className: 'font-man', // Ensure consistent font styling
       });
     } else {
       toast({
         description: `To continue, click the link in the email sent to: ${email}`,
-        className: 'font-man', // Ensure consistent font styling
       });
     }
 
-    // Reset the form fields if needed
-    setPending(false); // Set loading state back to false
+    // Reset the email state instead of the form
+    setEmail('');
+    setPending(false);
   }
+
+  const router = useRouter();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const supabase = createClientComponentClient();
 
   async function handleOAuthClick(provider: 'google') {
     setPending(true);
@@ -118,13 +121,13 @@ export function AuthUI({
                 type='checkbox'
                 className='h-4 w-4 shrink-0  border-gray-300 '
               />
-              <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
+              {/* <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
                 Remember me
-              </label>
+              </label> */}
             </div>
-            <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
+            {/* <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
               Forgot Password?
-            </a>
+            </a> */}
           </div>
 
           <button
@@ -150,17 +153,6 @@ export function AuthUI({
             <IoLogoGoogle size={20} />
             Continue with Google
           </button>
-
-          {/* <button
-            type="button"
-            onClick={() => handleOAuthClick('github')}
-            disabled={pending}
-            className="w-full flex items-center justify-center gap-4 py-3 px-6 text-sm tracking-wide text-gray-800 border border-gray-300 rounded-md bg-gray-50 hover:bg-gray-100 focus:outline-none"
-          >
-            <IoLogoGithub size={20} />
-            Continue with GitHub
-          </button> */}
-
           {mode === 'signup' && (
             <p className='mt-4 text-sm text-gray-600'>
               By clicking continue, you agree to our{' '}
