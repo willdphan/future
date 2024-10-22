@@ -63,19 +63,60 @@ export function AuthUI({
   async function handleOAuthClick(provider: 'google' | 'github') {
     setPending(true);
     try {
-      // controls the google behavior
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline', // refresh access tokens when user not present
-            prompt: 'select_account', // prompts user to select google account
+            access_type: 'offline',
+            prompt: 'select_account',
           },
         },
       });
-      // The user will be redirected to the provider's login page,
-      // so we don't need to handle success here.
+
+      // Check if the session is set after the sign-in attempt
+      const { session, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        toast({
+          variant: 'destructive',
+          description: 'Failed to retrieve session after sign-in.',
+        });
+      } else if (!session) {
+        console.warn('No session found after sign-in.');
+        toast({
+          variant: 'destructive',
+          description: 'No user session found, please try signing in again.',
+        });
+      } else {
+        // User is signed in, check if they exist in your users table
+        const { user } = session;
+        const { data: userData, error: userError } = await supabase
+          .from('users') // Replace 'users' with your actual table name
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) {
+          console.error('User retrieval error:', userError);
+          // Optionally create a new user record if they don't exist
+          const { error: createUserError } = await supabase
+            .from('users')
+            .insert([{ id: user.id, email: user.email, provider: provider }]); // Add any other fields you need
+
+          if (createUserError) {
+            console.error('User creation error:', createUserError);
+            toast({
+              variant: 'destructive',
+              description: 'Failed to create user account.',
+            });
+          } else {
+            toast({
+              description: 'User account created successfully.',
+            });
+          }
+        }
+      }
     } catch (error) {
       console.error('OAuth error:', error);
       toast({
