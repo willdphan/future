@@ -138,13 +138,13 @@ export function AuthUI({
 
       <div className='flex w-full items-center justify-center overflow-auto bg-[#E8E4DB] bg-white p-8 lg:w-1/2'>
         <form onSubmit={handleEmailSubmit} className='w-full max-w-md'>
-          <div className='mb-6'>
+          <div className='mb-4'>
             <h3 className='font-man text-3xl font-extrabold text-gray-800 '>Sign Up</h3>
             <p className='text-md mt-4 font-man text-gray-800'>Continue with your email.</p>
           </div>
 
           <div className='mb-4'>
-            <label className='mb-2 block font-man text-sm text-black'>Email</label>
+            {/* <label className='mb-2 block font-man text-sm text-black'>Email</label> */}
             <div className='relative flex items-center'>
               <input
                 type='email'
@@ -196,10 +196,10 @@ export function AuthUI({
             disabled={pending}
             className='mb-4 mb-[-1px] w-full border border-[1px] border-black bg-[#E8E4DB] px-6 py-3 font-man text-sm font-semibold tracking-wide text-black hover:bg-[#D4D0C6]'
           >
-            Sign In
+            Continue with Email
           </button>
 
-          <div className='my-4 flex items-center gap-4'>
+          {/* <div className='my-4 flex items-center gap-4'>
             <hr className='w-full border-black' />
             <p className='text-center text-sm text-black'>or</p>
             <hr className='w-full border-black' />
@@ -213,7 +213,7 @@ export function AuthUI({
           >
             <IoLogoGoogle size={20} />
             Continue with Google
-          </button>
+          </button> */}
 
           {/* <button
             type="button"
