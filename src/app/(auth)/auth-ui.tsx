@@ -108,14 +108,14 @@ export function AuthUI({
             </div>
           </div>
 
-          <div className='mb-4 flex items-center justify-between py-[0.5] font-man'>
+          <div className='mb-2 flex items-center justify-between py-[0.5] font-man'>
             <div className='flex items-center'>
-              <input
+              {/* <input
                 id='remember-me'
                 name='remember-me'
                 type='checkbox'
                 className='h-4 w-4 shrink-0  border-gray-300 '
-              />
+              /> */}
               {/* <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
                 Remember me
               </label> */}
