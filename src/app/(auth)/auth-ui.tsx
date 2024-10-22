@@ -23,47 +23,57 @@ export function AuthUI({
   signInWithEmail: (email: string) => Promise<ActionResponse>;
 }) {
   const [pending, setPending] = useState(false);
-  const [emailFormOpen, setEmailFormOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const supabase = createClientComponentClient();
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
-
-    // Use the email state instead of accessing the form element
-    // usestate with email
+    const form = event.target as HTMLFormElement;
+    const email = form['email'].value;
     const response = await signInWithEmail(email);
 
     if (response?.error) {
       toast({
         variant: 'destructive',
         description: 'An error occurred while authenticating. Please try again.',
+        className: 'font-man', // Ensure consistent font styling
       });
     } else {
       toast({
         description: `To continue, click the link in the email sent to: ${email}`,
+        className: 'font-man', // Ensure consistent font styling
       });
     }
 
-    // Reset the email state instead of the form
-    setEmail('');
+    form.reset();
     setPending(false);
   }
 
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const supabase = createClientComponentClient();
-
-  async function handleOAuthClick(provider: 'google') {
+  async function handleOAuthClick(provider: 'google' | 'github') {
     setPending(true);
-    const response = await signInWithOAuth(provider);
-
-    if (response?.error) {
+    try {
+      // controls the google behavior
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline', // refresh access tokens when user not present
+            prompt: 'select_account', // prompts user to select google account
+          },
+        },
+      });
+      // The user will be redirected to the provider's login page,
+      // so we don't need to handle success here.
+    } catch (error) {
+      console.error('OAuth error:', error);
       toast({
         variant: 'destructive',
         description: 'An error occurred while authenticating. Please try again.',
       });
+    } finally {
       setPending(false);
     }
   }
@@ -88,10 +98,11 @@ export function AuthUI({
             <div className='relative flex items-center'>
               <input
                 type='email'
+                name='email' // Ensure this is set
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm  text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter email'
               />
               {/* Email icon SVG */}
@@ -106,13 +117,13 @@ export function AuthUI({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className='w-full border border-black bg-white px-4 py-3.5 font-man  text-sm text-gray-800 focus:bg-transparent'
+                className='w-full border border-black bg-white px-4 py-3.5 font-man text-sm text-gray-800 focus:bg-transparent'
                 placeholder='Enter password'
               />
               {/* Password icon SVG */}
             </div>
           </div>
-
+          {/* 
           <div className='mb-4 flex items-center justify-between py-[0.5] font-man'>
             <div className='flex items-center'>
               <input
@@ -121,14 +132,14 @@ export function AuthUI({
                 type='checkbox'
                 className='h-4 w-4 shrink-0  border-gray-300 '
               />
-              {/* <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
+              <label htmlFor='remember-me' className='ml-3 block text-sm text-black'>
                 Remember me
-              </label> */}
+              </label>
             </div>
-            {/* <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
+            <a href='javascript:void(0);' className='text-sm font-medium text-[#0097FC] hover:underline'>
               Forgot Password?
-            </a> */}
-          </div>
+            </a>
+          </div> */}
 
           <button
             type='submit'
@@ -153,6 +164,17 @@ export function AuthUI({
             <IoLogoGoogle size={20} />
             Continue with Google
           </button>
+
+          {/* <button
+            type="button"
+            onClick={() => handleOAuthClick('github')}
+            disabled={pending}
+            className="w-full flex items-center justify-center gap-4 py-3 px-6 text-sm tracking-wide text-gray-800 border border-gray-300 rounded-md bg-gray-50 hover:bg-gray-100 focus:outline-none"
+          >
+            <IoLogoGithub size={20} />
+            Continue with GitHub
+          </button> */}
+
           {mode === 'signup' && (
             <p className='mt-4 text-sm text-gray-600'>
               By clicking continue, you agree to our{' '}
