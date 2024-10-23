@@ -142,18 +142,25 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     // Separate initial setup effect
     useEffect(() => {
       if (showChart && initialAction && !hasInitializedRef.current) {
-        hasInitializedRef.current = true; // Mark as initialized
+        hasInitializedRef.current = true;
         console.log('Initializing chart with action:', initialAction);
 
         const generateInitialOutcomes = async () => {
-          const outcomes = await generateOutcomes(0, 0, initialAction, true);
+          // Use INITIAL_HORIZONTAL_SPACING instead of 0 for the x position
+          const outcomes = await generateOutcomes(INITIAL_HORIZONTAL_SPACING, 0, initialAction, true);
           if (outcomes.length > 0) {
             const newTreeData = {
               id: 'initial',
               content: initialAction,
               position: { x: 0, y: 0 },
               type: 'action',
-              outcomes: outcomes,
+              outcomes: outcomes.map((outcome) => ({
+                ...outcome,
+                position: {
+                  x: INITIAL_HORIZONTAL_SPACING, // Set initial x position
+                  y: outcome.position.y,
+                },
+              })),
             };
             setTreeData(newTreeData);
             updateTreeData(newTreeData);
@@ -337,7 +344,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
                 >
                   {node.outcomes.map((outcome: TreeNode, index: number) => {
                     const isOutcomeSelected = selectedPath.length > path.length && selectedPath[path.length] === index;
-                    const startX = 0;
+                    const startX = -100;
                     const startY = node.position.y + NODE_HEIGHT / 2;
                     const endX = outcome.position.x;
                     const endY = outcome.position.y + NODE_HEIGHT / 2;
