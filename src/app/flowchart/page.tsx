@@ -2,9 +2,9 @@
 
 // TODO: we don't need the clow chart to accept user data, get rid of this props in order for being able to render flowchart every time while logged in.
 
-import React, { Suspense } from 'react';
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { Suspense, useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
@@ -15,46 +15,30 @@ import FlowChart from '../components/FlowChart';
 const FlowchartPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<any>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
 
   useEffect(() => {
     const checkUser = async () => {
       try {
-        console.log('Checking user session...');
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        console.log('Session:', session);
         if (session && session.user) {
-          console.log('User found:', session.user);
           setUser(session.user);
-
-          // Fetch user data
-          const { data, error } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-
-          if (error) {
-            console.error('Error fetching user data:', error);
-          } else {
-            console.log('User data fetched:', data);
-            setUserData(data);
-          }
-
-          setIsLoading(false);
         } else {
-          console.log('No user session found, redirecting to signup');
           router.push('/signup');
         }
       } catch (error) {
         console.error('Error checking user:', error);
         router.push('/signup');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkUser();
-  }, [router, supabase, searchParams]);
+  }, [router, supabase]);
 
   if (isLoading) {
     return (
@@ -72,7 +56,11 @@ const FlowchartPage = () => {
     );
   }
 
-  console.log('About to render FlowChart', { user, userData });
+  if (!user) {
+    return null; // This will prevent any flickering while redirecting
+  }
+
+  console.log('About to render FlowChart', { user });
   return user ? (
     <FlowChart user={user} />
   ) : (
