@@ -218,12 +218,12 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const handleSkippedQuestions = useCallback(() => {
     // Set default answers
     setAnswers(['Default situation', 'Default action']);
-    
+
     // Skip directly to showing the chart
     setShowChart(true);
     setOutcomesReady(true);
     setChartFullyRendered(true);
-    
+
     // No need for loading animations
     setIsGenerating(false);
     setShowSpline(false);

@@ -17,10 +17,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { debounce } from 'lodash';
 
-import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
+import { findNodeById, getNodePath } from '@/utils/tree';
 
 import FullScreenPopup from './FullScreenPopup';
-import LoadingPage from './Loading';
 import { PieGraph } from './PieGraph';
 
 // CONSTANTS
@@ -50,16 +49,7 @@ const getMinMaxCoordinates = (node: TreeNode) => {
 };
 
 const FlowGraph: React.FC<FlowGraphProps> = React.memo(
-  ({
-    initialSituation,
-    initialAction,
-    showChart,
-    onChartRendered,
-    updateNumberOfOutcomes,
-    updateTreeData,
-    selectedFlowchart,
-    zoom,
-  }) => {
+  ({ initialAction, showChart, onChartRendered, updateNumberOfOutcomes, updateTreeData, selectedFlowchart, zoom }) => {
     const isGeneratingRef = useRef(false);
     const hasInitializedRef = useRef(false); // Add this ref
     const [isInitialLoading, setIsInitialLoading] = useState(false);
@@ -177,18 +167,18 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       if (selectedFlowchart) {
         setTreeData(selectedFlowchart);
         onChartRendered();
-        
+
         // Count and update the number of outcomes
         const countOutcomes = (node: TreeNode): number => {
           let count = node.outcomes?.length || 0;
           if (node.outcomes) {
-            node.outcomes.forEach(outcome => {
+            node.outcomes.forEach((outcome) => {
               count += countOutcomes(outcome);
             });
           }
           return count;
         };
-        
+
         const totalOutcomes = countOutcomes(selectedFlowchart);
         updateNumberOfOutcomes(totalOutcomes);
       }
