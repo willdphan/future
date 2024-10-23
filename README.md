@@ -8,22 +8,20 @@ This project is an AI-powered application that generates outcomes based on user 
 ├── README.md
 ├── src/
 │ └── app/
-│ └── api/
-│ └── prolly.py
+│   └── api/
+│      └── prolly.py
 ```
 
 ## File Descriptions
 
-1. `README.md`: This file, containing information about the project, its structure, and how to set it up and use it.
+1. `src/app/api/prolly.py`: The main application script containing:
 
-2. `src/app/api/prolly.py`: The main application file containing:
-
-   - Configuration for the Groq API client
+   - Configuration for the Groq and Exa API client
    - The `generate_outcomes` function that processes user input and generates outcomes
    - FastAPI app setup with CORS middleware
    - Endpoint definition for the `/generate-outcomes` route
 
-## Setup and Installation
+## Frontend
 
 1. Clone the repository:
 
@@ -40,7 +38,15 @@ For Frontend:
 npm install
 ```
 
-For Backend:
+## Backend
+
+If you want to run this locally, we're using modal labs for deploying and running the FastAPI application. Create an account and create your env variables.
+
+Here's how you can create your secret keys in terminal:
+
+```
+modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
+```
 
 Modal will install these packages in the script of prolly.py
 
@@ -52,14 +58,13 @@ image = (
 )
 ```
 
-## Running the Application
-
-We are using modal labs for deploying and running the FastAPI application. Create an account and create your env variables.
-Here's how you can create your secret keys in terminal:
+To deploy this application locally, start the FastAPI server using Modal, making it accessible at `http://localhost:8000` by default.
 
 ```
-modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
+modal deploy src/app/api/prolly.py
 ```
+
+Otherwise, it should already be running on a Modal container.
 
 ## API Usage
 
@@ -69,22 +74,6 @@ The application exposes a single endpoint:
   - Accepts JSON payload with a `prompt` field
   - Returns generated outcomes based on the input prompt
 
-Example request:
-
-```
-{
-"prompt": "What are potential outcomes of climate change?"
-}
-```
-
-## Deployment
-
-You can deploy this application. This will start the FastAPI server using Modal, making it accessible at `http://localhost:8000` by default.
-
-```
-modal deploy src/app/api/prolly.py
-```
-
 ## TODO
 
 - [ ] More outcomes
@@ -92,6 +81,8 @@ modal deploy src/app/api/prolly.py
 - [ ] Better probability weighting
 - [ ] Dragable nodes
 - [ ] More details about entire generated flowchart
+- [ ] Loading page fix
+- [ ] More instructions to guide user
 
 ## License
 
