@@ -3,12 +3,15 @@
 // Defines server-side authentication functions that interact with Supabase 
 // to handle OAuth, email sign-in, and sign-out processes.
 
-import { redirect } from 'next/navigation';
-
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 import { getURL } from '@/utils/get-url';
 
+/**
+ * HANDLES EMAIL-BASED AUTHENTICATION BY SENDING A ONE-TIME PASSWORD (OTP)
+ * TO THE PROVIDED EMAIL ADDRESS. REDIRECTS TO THE FLOWCHART PAGE AFTER
+ * SUCCESSFUL AUTHENTICATION.
+ */
 export async function signInWithEmail(email: string): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
 
@@ -28,6 +31,11 @@ export async function signInWithEmail(email: string): Promise<ActionResponse> {
   return { data: null, error: null };
 }
 
+/**
+ * MANAGES OAUTH AUTHENTICATION FLOW FOR GITHUB AND GOOGLE PROVIDERS.
+ * REDIRECTS USER TO THE SELECTED PROVIDER'S AUTH PAGE AND THEN TO
+ * THE FLOWCHART PAGE AFTER SUCCESSFUL AUTHENTICATION.
+ */
 export async function signInWithOAuth(provider: 'github' | 'google'): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
 

@@ -22,39 +22,36 @@ export function AuthUI({
   signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
   signInWithEmail: (email: string) => Promise<ActionResponse>;
 }) {
-  const [pending, setPending] = useState(false);
-  const [emailFormOpen, setEmailFormOpen] = useState(false);
-
-  async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-
-    // Use the email state instead of accessing the form element
-    // usestate with email
-    const response = await signInWithEmail(email);
-
-    if (response?.error) {
-      toast({
-        variant: 'destructive',
-        description: 'An error occurred while authenticating. Please try again.',
-      });
-    } else {
-      toast({
-        description: `To continue, click the link in the email sent to: ${email}`,
-      });
-    }
-
-    // Reset the email state instead of the form
-    setEmail('');
-    setPending(false);
-  }
-
-  const router = useRouter();
-
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const supabase = createClientComponentClient();
+  const [pending, setPending] = useState(false);
 
+  // HANDLES EMAIL BASED AUTH
+  // async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
+  //   event.preventDefault();
+  //   setPending(true);
+
+  //   // Use the email state instead of accessing the form element
+  //   // usestate with email
+  //   const response = await signInWithEmail(email);
+
+  //   if (response?.error) {
+  //     toast({
+  //       variant: 'destructive',
+  //       description: 'An error occurred while authenticating. Please try again.',
+  //     });
+  //   } else {
+  //     toast({
+  //       description: `To continue, click the link in the email sent to: ${email}`,
+  //     });
+  //   }
+
+  //   // Reset the email state instead of the form
+  //   setEmail('');
+  //   setPending(false);
+  // }
+
+  // HANDLES GOOGLE SIGN IN
   async function handleOAuthClick(provider: 'google') {
     setPending(true);
     try {
@@ -88,7 +85,8 @@ export function AuthUI({
       </div>
 
       <div className='flex w-full items-center justify-center overflow-auto bg-[#E8E4DB] bg-white p-8 lg:w-1/2'>
-        <form onSubmit={handleEmailSubmit} className='w-full max-w-md'>
+        {/* <form onSubmit={handleEmailSubmit} className='w-full max-w-md'> */}
+        <div className='w-full max-w-md'>
           <div className='mb-0'>
             <h3 className='font-man text-3xl font-extrabold text-gray-800 '>Sign Up</h3>
             <p className='text-md mt-4 font-man text-gray-800'>Continue with your email.</p>
@@ -183,7 +181,8 @@ export function AuthUI({
               .
             </p>
           )}
-        </form>
+          {/* </form> */}
+        </div>
       </div>
     </div>
   );
