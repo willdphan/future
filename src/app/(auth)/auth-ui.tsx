@@ -6,10 +6,12 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IoLogoGoogle } from 'react-icons/io5';
-import { toast } from '../components/ui/use-toast';
+
 import { ActionResponse } from '@/types/action-response';
 import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+import { toast } from '../components/ui/use-toast';
 
 export function AuthUI({
   mode,
