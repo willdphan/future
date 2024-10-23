@@ -47,7 +47,9 @@ const getMinMaxCoordinates = (node: TreeNode) => {
   return { minX, minY, maxX, maxY };
 };
 
+// Add this import at the top
 import { debounce } from 'lodash'; // If using lodash
+
 
 const FlowGraph: React.FC<FlowGraphProps> = React.memo(
   ({
@@ -74,6 +76,9 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     const [editingNode, setEditingNode] = useState('start');
     const containerRef = useRef<HTMLDivElement>(null);
     const [popupNode, setPopupNode] = useState<PopupNode | null>(null);
+    const [lastClickTime, setLastClickTime] = useState<number>(0);
+    // Add this state at the top of the component with other states
+    const [activeActionNodeId, setActiveActionNodeId] = useState<string | null>(null);
 
     // Memoize the generate outcomes function
     const generateOutcomes = useCallback(
@@ -162,11 +167,13 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       }
     }, [showChart, initialAction]); // Minimal dependencies
 
-    // Handle action submit with debounce
+    // FINDS NODE IN TREE, UPDATE PARENT TREE DATA, UPDATE PARENT COMPONENT DATA, CLEAR STATE
+    // called when a user submits content for an action node
+    // calls teh generateOutcomes function
     const handleActionSubmit = useCallback(
       debounce(async (nodeId: string, content: string) => {
         if (isGeneratingRef.current) return;
-
+        
         try {
           const node = findNodeById(treeData, nodeId);
           if (!node) return;
@@ -195,79 +202,85 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [treeData, generateOutcomes, updateTreeData]
     );
 
-    // Cleanup effect
-    useEffect(() => {
-      return () => {
-        isGeneratingRef.current = false;
-        hasInitializedRef.current = false;
-      };
-    }, []);
-
     // HANDLES NODE SELECTION AND HIGHLIGHTS PATH
     // if path is not null, it sets path as selected path using selectedPath(path)
     const handleNodeClick = useCallback(
       (nodeId: string, event: React.MouseEvent) => {
         event.stopPropagation();
-        const clickedNode = findNodeById(treeData, nodeId);
-        if (clickedNode) {
-          const path = getNodePath(treeData, nodeId);
-          if (path !== null) {
-            setSelectedPath(path);
-            if (clickedNode.type === 'action') {
-              setEditingNode(nodeId);
+        const clickTime = new Date().getTime();
+        const timeDiff = clickTime - lastClickTime;
+
+        // Check if this is a double click (time difference less than 300ms)
+        if (timeDiff < 300) {
+          console.log('Double click detected!');
+          const clickedNode = findNodeById(treeData, nodeId);
+          
+          if (clickedNode?.type === 'outcome') {
+            // Create new action node
+            const newAction: TreeNode = {
+              id: `action-${Date.now()}`,
+              content: '',
+              position: {
+                x: clickedNode.position.x + HORIZONTAL_SPACING,
+                y: clickedNode.position.y,
+              },
+              type: 'action',
+              outcomes: [],
+            };
+
+            // Create new tree data with the added action node
+            const newTreeData = JSON.parse(JSON.stringify(treeData));
+            
+            // First, remove any existing action nodes from other outcomes
+            const removeExistingActions = (node: TreeNode) => {
+              if (node.outcomes) {
+                node.outcomes.forEach(outcome => {
+                  if (outcome.type === 'outcome') {
+                    outcome.outcomes = []; // Clear any existing action nodes
+                  }
+                });
+                node.outcomes.forEach(removeExistingActions);
+              }
+            };
+            removeExistingActions(newTreeData);
+
+            // Then add the new action node to the clicked outcome
+            const updateNodeInTree = (node: TreeNode): boolean => {
+              if (node.id === nodeId) {
+                node.outcomes = [newAction];
+                return true;
+              }
+              if (node.outcomes) {
+                return node.outcomes.some(updateNodeInTree);
+              }
+              return false;
+            };
+
+            updateNodeInTree(newTreeData);
+            
+            // Update states
+            setTreeData(newTreeData);
+            setEditingNode(newAction.id);
+            setActiveActionNodeId(newAction.id);
+            updateTreeData(newTreeData);
+          }
+        } else {
+          // This is a single click
+          const clickedNode = findNodeById(treeData, nodeId);
+          if (clickedNode) {
+            const path = getNodePath(treeData, nodeId);
+            if (path !== null) {
+              setSelectedPath(path);
+              if (clickedNode.type === 'action') {
+                setEditingNode(nodeId);
+              }
             }
           }
         }
+
+        setLastClickTime(clickTime);
       },
-      [treeData]
-    );
-
-    // TRIGGERED WHEN USER DOUBLE CLICKS ON NODE, ALLOWS FOR ADDITIONAL ACTION TO TAKE PLACE
-    const handleNodeDoubleClick = useCallback(
-      (nodeId: string, event: React.MouseEvent) => {
-        event.stopPropagation();
-        const clickedNode = findNodeById(treeData, nodeId);
-        if (clickedNode && clickedNode.type === 'outcome') {
-          setTreeData((prevTree) => {
-            const newTree = JSON.parse(JSON.stringify(prevTree)) as TreeNode;
-            const parentPath = getNodePath(newTree, nodeId);
-            if (parentPath === null) return prevTree;
-
-            const parentNodePath = parentPath.slice(0, -1);
-            const parentNode = getNodeByPath(newTree, parentNodePath);
-
-            if (!parentNode) return prevTree;
-
-            parentNode.outcomes.forEach((outcome) => {
-              outcome.outcomes = [];
-            });
-
-            const updateNode = (node: TreeNode): boolean => {
-              if (node.id === nodeId) {
-                const newAction: TreeNode = {
-                  id: `action-${Date.now()}`,
-                  content: '',
-                  position: {
-                    x: node.position.x + HORIZONTAL_SPACING,
-                    y: node.position.y,
-                  },
-                  type: 'action',
-                  outcomes: [], // This should now be correctly typed
-                };
-                node.outcomes = [newAction];
-                setEditingNode(newAction.id);
-                return true;
-              }
-              return node.outcomes.some(updateNode);
-            };
-            updateNode(newTree);
-            updateTreeData(newTree); // Add this line
-
-            return newTree;
-          });
-        }
-      },
-      [treeData, HORIZONTAL_SPACING]
+      [treeData, lastClickTime, updateTreeData]
     );
 
     // HANDLES EXPAND BUTTON CLICK, AKA WHENEVER USER PRESSES + ON NODE
@@ -370,7 +383,6 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
               alignItems: 'center',
             }}
             onClick={(e) => handleNodeClick(node.id, e)}
-            onDoubleClick={(e) => handleNodeDoubleClick(node.id, e)}
           >
             {node.type === 'action' && (isEditing || node.content === '') ? (
               <form
