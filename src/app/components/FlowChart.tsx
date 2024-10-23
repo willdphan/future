@@ -3,34 +3,40 @@
 /*
 MAIN CONTAINER COMPONENT FOR FLOWCHART FUNCTIONALITY
 
-The FlowChart component is the main container component for the flowchart functionality. It manages the overall state and orchestrates the user interaction flow. Here are its key responsibilities:
-
-1. It manages the overall state of the flowchart, including user interactions, data loading, and view switching.
-2. It handles user input for the initial situation and action.
-3. It manages the different views (outcomes, history, profile) and their respective components.
-4. It contains controls for zooming, saving, and refreshing the flowchart.
-5. It passes necessary props and callbacks to the FlowGraph component. 
+The FlowChart component is the main container component for the flowchart functionality.
+Key responsibilities:
+1. Manages overall flowchart state and user interactions
+2. Handles user input for initial situation and action
+3. Manages view switching (outcomes, history, profile)
+4. Contains controls for zooming, saving, and refreshing
+5. Orchestrates data flow between components
 */
 
-// 1. Imports
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
-
-// Local imports
-import withAuth from '@/utils/withAuth';
-import Spline from '@splinetool/react-spline';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-
+import Spline from '@splinetool/react-spline';
+import withAuth from '@/utils/withAuth';
 import Counter from './Counter';
 import FlowGraph from './FlowGraph';
 import History from './History';
 import LoadingPage from './Loading';
 import LogoutButton from './LogoutButton';
+import { signOut } from '@/app/(auth)/auth-actions';
 
-//////////////////////
-// FLOWCHART PAGE ////
-//////////////////////
+const QUESTIONS = ['Set the scene', 'Your Move.'];
+const PLACEHOLDERS = [
+  'Describe your current situation or environment. This context helps us tailor our assistance.',
+  "Given your situation, what's the first step or course of action you plan to take?",
+];
+const API_URL = 'https://willdphan--fastapi-groq-api-generate-outcomes.modal.run';
+
+// Add this type if not already defined
+interface ActionResponse {
+  data: any | null;
+  error: Error | null;
+}
 
 const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [step, setStep] = useState(0);
@@ -41,83 +47,30 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [chartFullyRendered, setChartFullyRendered] = useState(false);
   const [showSpline, setShowSpline] = useState(false);
   const [numberOfOutcomes, setNumberOfOutcomes] = useState(0);
+  const [treeData, setTreeData] = useState<TreeNode>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFlowchart, setSelectedFlowchart] = useState<TreeNode | null>(null);
+  const [activeView, setActiveView] = useState<'profile' | 'outcomes' | 'history'>('outcomes');
+  const [zoom, setZoom] = useState(1);
+
   const isGeneratingRef = useRef(false);
   const abortControllerRef = useRef(new AbortController());
-  const [treeData, setTreeData] = useState<TreeNode>(); // Add this line
-  const [isLoading, setIsLoading] = useState(false);
-
-  const loadFlowchart = async (id: string) => {
-    try {
-      const { data, error } = await supabase.from('flowcharts').select('tree_data').eq('id', id).single();
-
-      if (error) throw error;
-
-      setSelectedFlowchart(data.tree_data);
-      setActiveView('outcomes'); // Switch to outcomes view to display the loaded flowchart
-    } catch (error) {
-      console.error('Error loading flowchart:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      if (id) {
-        loadFlowchart(id);
-      }
-    }
-  }, [loadFlowchart]); // Add loadFlowchart to the dependency array
-
-  const questions = ['Set the scene', 'Your Move.'];
-
-  const placeholders = [
-    'Describe your current situation or environment. This context helps us tailor our assistance.',
-    "Given your situation, what's the first step or course of action you plan to take?",
-  ];
-
-  const [selectedFlowchart, setSelectedFlowchart] = useState<TreeNode | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClientComponentClient();
 
-  const updateTreeData = (newData: TreeNode) => {
-    setTreeData(newData);
-  };
-
-  const saveFlowchart = async () => {
-    const supabase = createClientComponentClient();
-    try {
-      const { data, error } = await supabase
-        .from('flowcharts')
-        .insert([
-          {
-            user_email: user.email,
-            tree_data: treeData,
-          },
-        ])
-        .select();
-
-      if (error) {
-        console.error('Error saving flowchart:', error);
-        alert(`Error saving flowchart: ${error.message}`);
-      } else {
-        console.log('Flowchart saved successfully:', data);
-        alert('Flowchart saved!');
-      }
-    } catch (err) {
-      console.error('Exception when saving flowchart:', err);
-      alert(`Exception when saving flowchart: ${err.message}`);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newAnswers = [...answers];
-    newAnswers[step] = e.target.value;
-    setAnswers(newAnswers);
-  };
+  // HANDLERS
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newAnswers = [...answers];
+      newAnswers[step] = e.target.value;
+      setAnswers(newAnswers);
+    },
+    [answers, step]
+  );
 
   const handleInputSubmit = async () => {
-    if (step < questions.length - 1) {
+    if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else if (!isGeneratingRef.current) {
       setIsLoading(true);
@@ -126,6 +79,97 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     }
   };
 
+  const handleChartRendered = useCallback(() => {
+    setChartFullyRendered(true);
+    setShowSpline(false);
+  }, []);
+
+  const handleSkippedQuestions = useCallback(() => {
+    setAnswers(['Default situation', 'Default action']);
+    setShowChart(true);
+    setOutcomesReady(true);
+    setChartFullyRendered(true);
+    setIsGenerating(false);
+    setShowSpline(false);
+  }, []);
+
+  const handleGoHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.location.href = '/';
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  const handleScrollUp = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const scrollToFlowchart = () => {
+    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+  };
+
+  // ZOOM FUNCTIONALITY
+  const handleZoom = useCallback((direction: 'in' | 'out') => {
+    setZoom((prevZoom) => {
+      let newZoom = direction === 'in' ? prevZoom * 1.2 : prevZoom / 1.2;
+
+      if (containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const parentRect = containerRef.current.parentElement?.getBoundingClientRect();
+
+        if (parentRect) {
+          const minZoom = Math.min(parentRect.width / containerRect.width, parentRect.height / containerRect.height);
+          newZoom = Math.max(newZoom, minZoom);
+        }
+      }
+
+      return newZoom;
+    });
+  }, []);
+
+  // DATA MANAGEMENT
+  const updateTreeData = (newData: TreeNode) => {
+    setTreeData(newData);
+  };
+
+  const updateNumberOfOutcomes = useCallback((count: number) => {
+    setNumberOfOutcomes(count);
+  }, []);
+
+  const loadFlowchart = async (id: string) => {
+    try {
+      const { data, error } = await supabase.from('flowcharts').select('tree_data').eq('id', id).single();
+
+      if (error) throw error;
+
+      setSelectedFlowchart(data.tree_data);
+      setActiveView('outcomes');
+    } catch (error) {
+      console.error('Error loading flowchart:', error);
+    }
+  };
+
+  // SAVE FLOWCHART
+  const saveFlowchart = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flowcharts')
+        .insert([{ user_email: user.email, tree_data: treeData }])
+        .select();
+
+      if (error) throw error;
+
+      console.log('Flowchart saved successfully:', data);
+      alert('Flowchart saved!');
+    } catch (err) {
+      console.error('Error saving flowchart:', err);
+      alert(`Error saving flowchart: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  // MAIN LOGIC
   const progressStep = useCallback(async () => {
     if (isGeneratingRef.current) {
       console.log('Already generating outcomes, skipping...');
@@ -137,53 +181,38 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     setShowSpline(true);
 
     const callId = Date.now();
-    console.log(`Starting outcome generation... (Call ID: ${callId})`);
 
     try {
-      abortControllerRef.current.abort(); // Cancel any ongoing requests
+      abortControllerRef.current.abort();
       abortControllerRef.current = new AbortController();
 
-      const combinedInput = `${answers[0]}\n${answers[1]}`;
-
-      // EDIT API LINK HERE!
-      const response = await fetch('https://willdphan--fastapi-groq-api-generate-outcomes.modal.run', {
+      const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: combinedInput }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `${answers[0]}\n${answers[1]}` }),
         signal: abortControllerRef.current.signal,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
-      console.log(`API response received: (Call ID: ${callId})`, data);
 
       if (Array.isArray(data.outcomes) && data.outcomes.length > 0) {
-        console.log(`Updating number of outcomes to ${data.outcomes.length} (Call ID: ${callId})`);
         setNumberOfOutcomes(data.outcomes.length);
       } else {
-        console.error(`No outcomes or invalid outcomes array: (Call ID: ${callId})`, data.outcomes);
         setNumberOfOutcomes(0);
       }
 
-      console.log(`Setting outcomesReady to true (Call ID: ${callId})`);
       setOutcomesReady(true);
-    } catch (error: unknown) {
+    } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           console.log(`Request aborted (Call ID: ${callId})`);
         } else {
           console.error(`Error in outcome generation: (Call ID: ${callId})`, error);
         }
-      } else {
-        console.error(`Unknown error occurred: (Call ID: ${callId})`, error);
       }
     } finally {
-      console.log(`Finishing outcome generation... (Call ID: ${callId})`);
       setIsGenerating(false);
       isGeneratingRef.current = false;
     }
@@ -191,10 +220,17 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
 
   const debouncedProgressStep = useMemo(() => debounce(progressStep, 300), [progressStep]);
 
+  // EFFECTS
   useEffect(() => {
-    if (outcomesReady) {
-      setShowChart(true);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+      if (id) loadFlowchart(id);
     }
+  }, []);
+
+  useEffect(() => {
+    if (outcomesReady) setShowChart(true);
   }, [outcomesReady]);
 
   useEffect(() => {
@@ -204,88 +240,25 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     };
   }, [debouncedProgressStep]);
 
-  const handleChartRendered = useCallback(() => {
-    setChartFullyRendered(true);
-    setShowSpline(false);
-  }, []);
-
-  const updateNumberOfOutcomes = useCallback((count: number) => {
-    setNumberOfOutcomes(count);
-  }, []);
-
-  const [activeView, setActiveView] = useState<'profile' | 'outcomes' | 'history'>('outcomes');
-
-  const handleSkippedQuestions = useCallback(() => {
-    // Set default answers
-    setAnswers(['Default situation', 'Default action']);
-
-    // Skip directly to showing the chart
-    setShowChart(true);
-    setOutcomesReady(true);
-    setChartFullyRendered(true);
-
-    // No need for loading animations
-    setIsGenerating(false);
-    setShowSpline(false);
-  }, []);
-
-  const scrollToFlowchart = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: 'smooth',
-    });
-  };
-
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
-  const handleScrollUp = useCallback(() => {
-    console.log('Scroll up button clicked');
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  }, []);
-
-  const handleGoHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    window.location.href = '/';
-  };
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(1);
-
-  useEffect(() => {
-    console.log('Zoom state updated:', zoom);
-  }, [zoom]);
-
-  const handleZoom = useCallback((direction: 'in' | 'out') => {
-    console.log('handleZoom called with direction:', direction);
-    setZoom((prevZoom) => {
-      let newZoom = direction === 'in' ? prevZoom * 1.2 : prevZoom / 1.2;
-      console.log('New zoom calculated:', newZoom);
-
-      // Ensure we don't zoom out beyond fitting the entire graph
-      if (containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const parentRect = containerRef.current.parentElement?.getBoundingClientRect();
-
-        if (parentRect) {
-          const minZoom = Math.min(parentRect.width / containerRect.width, parentRect.height / containerRect.height);
-          newZoom = Math.max(newZoom, minZoom);
-        }
+  // Add this handler with your other handlers
+  const handleLogout = useCallback(async () => {
+    try {
+      const response = await signOut();
+      if (response.error) {
+        console.error('Logout error:', response.error);
+        alert('Error logging out. Please try again.');
+        return;
       }
 
-      console.log('Final zoom value:', newZoom);
-      return newZoom;
-    });
+      // On successful logout, redirect to home page
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Error logging out. Please try again.');
+    }
   }, []);
 
-  // Remove or comment out these console.logs
-  // console.log('FlowChart component rendered');
-  // console.log('User:', user);
-
+  // RENDER
   return (
     <>
       {isLoading && <LoadingPage />}
@@ -340,14 +313,14 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
                   >
-                    {questions[step]}
+                    {QUESTIONS[step]}
                   </motion.h2>
                   <form onSubmit={handleInputSubmit}>
                     <motion.textarea
                       value={answers[step]}
                       onChange={handleInputChange}
                       className='placeholder-center mb-4 mb-[-64px] w-full resize-none overflow-auto bg-transparent text-center font-man focus:outline-none focus:ring-0'
-                      placeholder={placeholders[step]}
+                      placeholder={PLACEHOLDERS[step]}
                       autoFocus
                       style={{
                         maxHeight: '200px',
@@ -389,7 +362,7 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
                     >
                       <h2 className='mb-2 font-ibm text-lg uppercase text-[#3C3C3C]'>PROFILE</h2>
                       <h2 className='mb-2 font-man text-lg text-gray-500'>{user.email}</h2>
-                      <LogoutButton />
+                      <LogoutButton onLogout={handleLogout} />
                     </motion.div>
                   )}
 
@@ -582,7 +555,8 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   );
 });
 
-// Add displayName for debugging
+// --- Display Name ---
 FlowChart.displayName = 'FlowChart';
 
+// --- Exports ---
 export default withAuth(FlowChart);

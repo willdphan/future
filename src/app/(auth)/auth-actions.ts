@@ -47,6 +47,7 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
   return { data: null, error: null };
 }
 
+
 export async function signOut(): Promise<ActionResponse> {
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.auth.signOut();

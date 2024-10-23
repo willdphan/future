@@ -1,35 +1,18 @@
-import { useState } from 'react';
+import React from 'react';
 
-import { signOut } from '../(auth)/auth-actions';
+interface LogoutButtonProps {
+  onLogout: () => Promise<void>;
+}
 
-import { toast } from './ui/use-toast';
-
-export default function LogoutButton() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLoading(true);
-    try {
-      await signOut();
-      // redirect('/signup')
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to log out. Please try again.',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    }
-  };
-
+const LogoutButton: React.FC<LogoutButtonProps> = ({ onLogout }) => {
   return (
     <button
-      className='mt-2 border-none bg-[#3C3C3C] px-3 py-1 font-man text-white'
-      onClick={handleLogout}
-      disabled={isLoading}
+      onClick={onLogout}
+      className="border border-[1px] border-black bg-[#3C3C3C] px-4 py-2 font-man text-white hover:bg-[#E8E4DB] hover:text-black"
     >
-      {isLoading ? 'Logging Out...' : 'Log Out'}
+      Logout
     </button>
   );
-}
+};
+
+export default LogoutButton;
