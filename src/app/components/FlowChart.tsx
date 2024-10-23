@@ -15,15 +15,17 @@ Key responsibilities:
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import debounce from 'lodash/debounce';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import Spline from '@splinetool/react-spline';
+
+import { signOut } from '@/app/(auth)/auth-actions';
 import withAuth from '@/utils/withAuth';
+import Spline from '@splinetool/react-spline';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import Counter from './Counter';
 import FlowGraph from './FlowGraph';
 import History from './History';
 import LoadingPage from './Loading';
 import LogoutButton from './LogoutButton';
-import { signOut } from '@/app/(auth)/auth-actions';
 
 const QUESTIONS = ['Set the scene', 'Your Move.'];
 const PLACEHOLDERS = [
@@ -548,5 +550,7 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     </>
   );
 });
+
+FlowChart.displayName = 'FlowChart';
 
 export default withAuth(FlowChart);
