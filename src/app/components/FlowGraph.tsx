@@ -172,6 +172,28 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       }
     }, [showChart, initialAction]); // Minimal dependencies
 
+    // Add effect to handle selectedFlowchart changes
+    useEffect(() => {
+      if (selectedFlowchart) {
+        setTreeData(selectedFlowchart);
+        onChartRendered();
+        
+        // Count and update the number of outcomes
+        const countOutcomes = (node: TreeNode): number => {
+          let count = node.outcomes?.length || 0;
+          if (node.outcomes) {
+            node.outcomes.forEach(outcome => {
+              count += countOutcomes(outcome);
+            });
+          }
+          return count;
+        };
+        
+        const totalOutcomes = countOutcomes(selectedFlowchart);
+        updateNumberOfOutcomes(totalOutcomes);
+      }
+    }, [selectedFlowchart, onChartRendered, updateNumberOfOutcomes]);
+
     // FINDS NODE IN TREE, UPDATE PARENT TREE DATA, UPDATE PARENT COMPONENT DATA, CLEAR STATE
     // called when a user submits content for an action node
     // calls teh generateOutcomes function

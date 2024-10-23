@@ -215,12 +215,19 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
 
   const [activeView, setActiveView] = useState<'profile' | 'outcomes' | 'history'>('outcomes');
 
-  const handleSkippedQuestions = () => {
-    setIsGenerating(true);
-    setShowSpline(true);
-    setOutcomesReady(true);
+  const handleSkippedQuestions = useCallback(() => {
+    // Set default answers
+    setAnswers(['Default situation', 'Default action']);
+    
+    // Skip directly to showing the chart
     setShowChart(true);
-  };
+    setOutcomesReady(true);
+    setChartFullyRendered(true);
+    
+    // No need for loading animations
+    setIsGenerating(false);
+    setShowSpline(false);
+  }, []);
 
   const scrollToFlowchart = () => {
     window.scrollTo({
