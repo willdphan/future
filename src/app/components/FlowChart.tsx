@@ -46,6 +46,19 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [treeData, setTreeData] = useState<TreeNode>(); // Add this line
   const [isLoading, setIsLoading] = useState(false);
 
+  const loadFlowchart = async (id: string) => {
+    try {
+      const { data, error } = await supabase.from('flowcharts').select('tree_data').eq('id', id).single();
+
+      if (error) throw error;
+
+      setSelectedFlowchart(data.tree_data);
+      setActiveView('outcomes'); // Switch to outcomes view to display the loaded flowchart
+    } catch (error) {
+      console.error('Error loading flowchart:', error);
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -54,7 +67,7 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
         loadFlowchart(id);
       }
     }
-  }, []);
+  }, [loadFlowchart]); // Add loadFlowchart to the dependency array
 
   const questions = ['Set the scene', 'Your Move.'];
 
@@ -94,19 +107,6 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     } catch (err) {
       console.error('Exception when saving flowchart:', err);
       alert(`Exception when saving flowchart: ${err.message}`);
-    }
-  };
-
-  const loadFlowchart = async (id: string) => {
-    try {
-      const { data, error } = await supabase.from('flowcharts').select('tree_data').eq('id', id).single();
-
-      if (error) throw error;
-
-      setSelectedFlowchart(data.tree_data);
-      setActiveView('outcomes'); // Switch to outcomes view to display the loaded flowchart
-    } catch (error) {
-      console.error('Error loading flowchart:', error);
     }
   };
 

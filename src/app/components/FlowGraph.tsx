@@ -12,15 +12,17 @@ The FlowGraph component is responsible for rendering and managing the actual flo
 7. It's responsive to zoom levels and manages its own positioning within a container.
 */
 
+import React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion'; // Add this import
+import { motion } from 'framer-motion';
+import { debounce } from 'lodash';
 
 import { findNodeById, getNodeByPath, getNodePath } from '@/utils/tree';
 
 import FullScreenPopup from './FullScreenPopup';
 import LoadingPage from './Loading';
-import { PieGraph } from './PieGraph'; // Make sure this import path is correct
-import React from 'react';
+import { PieGraph } from './PieGraph';
+
 // CONSTANTS
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 100;
@@ -49,7 +51,6 @@ const getMinMaxCoordinates = (node: TreeNode) => {
 
 // Add this import at the top
 import { debounce } from 'lodash'; // If using lodash
-
 
 const FlowGraph: React.FC<FlowGraphProps> = React.memo(
   ({
@@ -173,7 +174,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     const handleActionSubmit = useCallback(
       debounce(async (nodeId: string, content: string) => {
         if (isGeneratingRef.current) return;
-        
+
         try {
           const node = findNodeById(treeData, nodeId);
           if (!node) return;
@@ -214,7 +215,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
         if (timeDiff < 300) {
           console.log('Double click detected!');
           const clickedNode = findNodeById(treeData, nodeId);
-          
+
           if (clickedNode?.type === 'outcome') {
             // Create new action node
             const newAction: TreeNode = {
@@ -230,11 +231,11 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
 
             // Create new tree data with the added action node
             const newTreeData = JSON.parse(JSON.stringify(treeData));
-            
+
             // First, remove any existing action nodes from other outcomes
             const removeExistingActions = (node: TreeNode) => {
               if (node.outcomes) {
-                node.outcomes.forEach(outcome => {
+                node.outcomes.forEach((outcome) => {
                   if (outcome.type === 'outcome') {
                     outcome.outcomes = []; // Clear any existing action nodes
                   }
@@ -257,7 +258,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
             };
 
             updateNodeInTree(newTreeData);
-            
+
             // Update states
             setTreeData(newTreeData);
             setEditingNode(newAction.id);
