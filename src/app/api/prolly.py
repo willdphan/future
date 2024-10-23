@@ -2,7 +2,7 @@
 # modal secret create my-api-keys GROQ_API_KEY={key} EXA_API_KEY={key}
 
 # Deploy
-# Run: modal deploy src/app/api/groq.py
+# Run: modal deploy src/app/api/prolly.py
 
 import os
 import re

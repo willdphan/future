@@ -32,7 +32,7 @@ import LogoutButton from './LogoutButton';
 // FLOWCHART PAGE ////
 //////////////////////
 
-const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
+const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(['', '']);
   const [showChart, setShowChart] = useState(false);
@@ -275,8 +275,9 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
     });
   }, []);
 
-  console.log('FlowChart component rendered');
-  console.log('User:', user);
+  // Remove or comment out these console.logs
+  // console.log('FlowChart component rendered');
+  // console.log('User:', user);
 
   return (
     <>
@@ -572,6 +573,9 @@ const FlowChart: React.FC<FlowChartPageProps> = ({ user }) => {
       </div>
     </>
   );
-};
+});
+
+// Add displayName for debugging
+FlowChart.displayName = 'FlowChart';
 
 export default withAuth(FlowChart);

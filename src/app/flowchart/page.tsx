@@ -17,14 +17,18 @@ const FlowchartPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
+    if (sessionChecked) return; // Skip if we've already checked the session
+
     const checkUser = async () => {
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        if (session && session.user) {
+
+        if (session?.user) {
           setUser(session.user);
         } else {
           router.push('/signup');
@@ -34,11 +38,12 @@ const FlowchartPage = () => {
         router.push('/signup');
       } finally {
         setIsLoading(false);
+        setSessionChecked(true); // Mark that we've checked the session
       }
     };
 
     checkUser();
-  }, [router, supabase]);
+  }, [router, supabase, sessionChecked]); // Only run when these dependencies change
 
   if (isLoading) {
     return (
