@@ -32,12 +32,6 @@ const PLACEHOLDERS = [
 ];
 const API_URL = 'https://willdphan--fastapi-groq-api-generate-outcomes.modal.run';
 
-// Add this type if not already defined
-interface ActionResponse {
-  data: any | null;
-  error: Error | null;
-}
-
 const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(['', '']);
@@ -555,8 +549,4 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   );
 });
 
-// --- Display Name ---
-FlowChart.displayName = 'FlowChart';
-
-// --- Exports ---
 export default withAuth(FlowChart);

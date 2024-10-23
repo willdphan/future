@@ -8,12 +8,15 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
   const [error, setError] = useState<string | null>(null);
   const supabase = createClientComponentClient();
 
+  // FETCH FLOWCHARTS
   useEffect(() => {
     const fetchFlowcharts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
           setError('User not authenticated');
           setLoading(false);
@@ -23,7 +26,7 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
         // Fetch full flowchart data including tree_data
         const { data, error } = await supabase
           .from('flowcharts')
-          .select('*')  // Select all columns including tree_data
+          .select('*') // Select all columns including tree_data
           .eq('user_email', session.user.email)
           .order('created_at', { ascending: false });
 
@@ -55,9 +58,7 @@ const History: React.FC<HistoryProps> = ({ onLoadFlowchart }) => {
                 onClick={() => onLoadFlowchart(flowchart.id)}
                 className='w-full rounded-md border border-black bg-white px-4 py-2 text-left transition-colors duration-200 hover:bg-gray-100'
               >
-                <span className='font-man text-gray-700'>
-                  {new Date(flowchart.created_at).toLocaleString()}
-                </span>
+                <span className='font-man text-gray-700'>{new Date(flowchart.created_at).toLocaleString()}</span>
               </button>
             </li>
           ))}
