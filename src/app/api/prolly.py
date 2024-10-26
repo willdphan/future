@@ -237,7 +237,7 @@ def fastapi_app():
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://future-iar4.vercel.app"],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -22,7 +22,7 @@ import { findNodeById, getNodePath } from '@/utils/tree';
 import FullScreenPopup from './FullScreenPopup';
 import { PieGraph } from './PieGraph';
 
-// CONSTANTS
+// 1. Constants and utility functions
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 100;
 const INITIAL_HORIZONTAL_SPACING = 300;
@@ -31,8 +31,6 @@ const VERTICAL_SPACING = 150;
 
 const MODAL_API_URL = 'https://willdphan--fastapi-groq-api-outcomes.modal.run';
 
-// MIN/MAX COORDS
-// Add this function near the top of the component, after the state declarations
 const getMinMaxCoordinates = (node: TreeNode) => {
   let minX = node.position.x;
   let minY = node.position.y;
@@ -50,11 +48,10 @@ const getMinMaxCoordinates = (node: TreeNode) => {
   return { minX, minY, maxX, maxY };
 };
 
+// 2. Main component
 const FlowGraph: React.FC<FlowGraphProps> = React.memo(
   ({ initialAction, showChart, onChartRendered, updateNumberOfOutcomes, updateTreeData, selectedFlowchart, zoom }) => {
-    const isGeneratingRef = useRef(false);
-    const hasInitializedRef = useRef(false); // Add this ref
-    const [isInitialLoading, setIsInitialLoading] = useState(false);
+    // 3. State declarations
     const [treeData, setTreeData] = useState<TreeNode>({
       id: 'start',
       content: '',
@@ -70,8 +67,11 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     // Add this state at the top of the component with other states
     const [activeActionNodeId, setActiveActionNodeId] = useState<string | null>(null);
 
-    // SUBSEQUENT CALLS
-    // Memoize the generate outcomes function
+    // 4. Refs
+    const isGeneratingRef = useRef(false);
+    const hasInitializedRef = useRef(false);
+
+    // 5. Memoized functions
     const generateOutcomes = useCallback(
       async (parentX: number, parentY: number, action: string, isInitial: boolean = false) => {
         if (isGeneratingRef.current) {
@@ -131,64 +131,6 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [updateNumberOfOutcomes]
     );
 
-    // Separate initial setup effect
-    useEffect(() => {
-      if (showChart && initialAction && !hasInitializedRef.current) {
-        hasInitializedRef.current = true;
-        console.log('Initializing chart with action:', initialAction);
-
-        const generateInitialOutcomes = async () => {
-          // Use INITIAL_HORIZONTAL_SPACING instead of 0 for the x position
-          const outcomes = await generateOutcomes(INITIAL_HORIZONTAL_SPACING, 0, initialAction, true);
-          if (outcomes.length > 0) {
-            const newTreeData = {
-              id: 'initial',
-              content: initialAction,
-              position: { x: 0, y: 0 },
-              type: 'action',
-              outcomes: outcomes.map((outcome) => ({
-                ...outcome,
-                position: {
-                  x: INITIAL_HORIZONTAL_SPACING, // Set initial x position
-                  y: outcome.position.y,
-                },
-              })),
-            };
-            setTreeData(newTreeData);
-            updateTreeData(newTreeData);
-            onChartRendered();
-          }
-        };
-
-        generateInitialOutcomes();
-      }
-    }, [showChart, initialAction]); // Minimal dependencies
-
-    // Add effect to handle selectedFlowchart changes
-    useEffect(() => {
-      if (selectedFlowchart) {
-        setTreeData(selectedFlowchart);
-        onChartRendered();
-
-        // Count and update the number of outcomes
-        const countOutcomes = (node: TreeNode): number => {
-          let count = node.outcomes?.length || 0;
-          if (node.outcomes) {
-            node.outcomes.forEach((outcome) => {
-              count += countOutcomes(outcome);
-            });
-          }
-          return count;
-        };
-
-        const totalOutcomes = countOutcomes(selectedFlowchart);
-        updateNumberOfOutcomes(totalOutcomes);
-      }
-    }, [selectedFlowchart, onChartRendered, updateNumberOfOutcomes]);
-
-    // FINDS NODE IN TREE, UPDATE PARENT TREE DATA, UPDATE PARENT COMPONENT DATA, CLEAR STATE
-    // called when a user submits content for an action node
-    // calls teh generateOutcomes function
     const handleActionSubmit = useCallback(
       debounce(async (nodeId: string, content: string) => {
         if (isGeneratingRef.current) return;
@@ -221,8 +163,6 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [treeData, generateOutcomes, updateTreeData]
     );
 
-    // HANDLES NODE SELECTION AND HIGHLIGHTS PATH
-    // if path is not null, it sets path as selected path using selectedPath(path)
     const handleNodeClick = useCallback(
       (nodeId: string, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -302,7 +242,6 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [treeData, lastClickTime, updateTreeData]
     );
 
-    // HANDLES EXPAND BUTTON CLICK, AKA WHENEVER USER PRESSES + ON NODE
     const handleExpandClick = useCallback(
       (nodeId: string, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -320,7 +259,61 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [treeData]
     );
 
-    // RENDERS INDIVIDUAL NODES
+    // 6. Effect hooks
+    useEffect(() => {
+      if (showChart && initialAction && !hasInitializedRef.current) {
+        hasInitializedRef.current = true;
+        console.log('Initializing chart with action:', initialAction);
+
+        const generateInitialOutcomes = async () => {
+          // Use INITIAL_HORIZONTAL_SPACING instead of 0 for the x position
+          const outcomes = await generateOutcomes(INITIAL_HORIZONTAL_SPACING, 0, initialAction, true);
+          if (outcomes.length > 0) {
+            const newTreeData = {
+              id: 'initial',
+              content: initialAction,
+              position: { x: 0, y: 0 },
+              type: 'action',
+              outcomes: outcomes.map((outcome) => ({
+                ...outcome,
+                position: {
+                  x: INITIAL_HORIZONTAL_SPACING, // Set initial x position
+                  y: outcome.position.y,
+                },
+              })),
+            };
+            setTreeData(newTreeData);
+            updateTreeData(newTreeData);
+            onChartRendered();
+          }
+        };
+
+        generateInitialOutcomes();
+      }
+    }, [showChart, initialAction]);
+
+    useEffect(() => {
+      if (selectedFlowchart) {
+        setTreeData(selectedFlowchart);
+        onChartRendered();
+
+        // Count and update the number of outcomes
+        const countOutcomes = (node: TreeNode): number => {
+          let count = node.outcomes?.length || 0;
+          if (node.outcomes) {
+            node.outcomes.forEach((outcome) => {
+              count += countOutcomes(outcome);
+            });
+          }
+          return count;
+        };
+
+        const totalOutcomes = countOutcomes(selectedFlowchart);
+        updateNumberOfOutcomes(totalOutcomes);
+      }
+    }, [selectedFlowchart, onChartRendered, updateNumberOfOutcomes]);
+
+    // 7. Render functions
     const renderNode = (node: TreeNode, depth: number = 0, path: number[] = []): React.ReactNode => {
       if (!node) return null;
       const hasOutcomes = node.outcomes && node.outcomes.length > 0;
@@ -498,11 +491,11 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       );
     };
 
+    // 8. Component logic and return statement
     const { minX, minY, maxX, maxY } = getMinMaxCoordinates(treeData);
     const containerWidth = maxX - minX + NODE_WIDTH + HORIZONTAL_SPACING;
     const containerHeight = maxY - minY + NODE_HEIGHT + VERTICAL_SPACING;
 
-    // css styling
     const containerStyle: React.CSSProperties = {
       width: `${containerWidth}px`,
       height: `${containerHeight}px`,
@@ -517,9 +510,8 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
 
     return (
       <>
-        {/* {isInitialLoading && <LoadingPage />} */}
-        <div className='relative h-full w-full overflow-auto bg-[#E8E4DB]'>
-          <div ref={containerRef} style={containerStyle} className='relative min-h-full' key={JSON.stringify(treeData)}>
+        <div className="relative h-full w-full overflow-auto bg-[#E8E4DB]">
+          <div ref={containerRef} style={containerStyle} className="relative min-h-full" key={JSON.stringify(treeData)}>
             {renderNode(treeData)}
           </div>
           {popupNode && <FullScreenPopup node={popupNode} onClose={() => setPopupNode(null)} />}
