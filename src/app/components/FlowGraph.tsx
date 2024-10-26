@@ -29,6 +29,8 @@ const INITIAL_HORIZONTAL_SPACING = 300;
 const HORIZONTAL_SPACING = 550;
 const VERTICAL_SPACING = 150;
 
+const MODAL_API_URL = 'https://willdphan--fastapi-groq-api-outcomes.modal.run';
+
 // MIN/MAX COORDS
 // Add this function near the top of the component, after the state declarations
 const getMinMaxCoordinates = (node: TreeNode) => {
@@ -87,7 +89,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
 
         try {
           // EDIT API LINK HERE!
-          const response = await fetch('https://willdphan--fastapi-groq-api-outcomes.modal.run', {
+          const response = await fetch(MODAL_API_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
