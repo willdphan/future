@@ -19,7 +19,7 @@ This project is an AI-powered application that generates outcomes based on user 
    - Configuration for the Groq and Exa API client
    - The `outcomes` function that processes user input and generates outcomes
    - FastAPI app setup with CORS middleware
-   - Endpoint definition for the `/generate-outcomes` route
+   - Endpoint definition for the `/outcomes` route
 
 ## Frontend
 
@@ -70,7 +70,7 @@ Otherwise, it should already be running on a Modal container.
 
 The application exposes a single endpoint:
 
-- `POST /generate-outcomes`
+- `POST /outcomes`
   - Accepts JSON payload with a `prompt` field
   - Returns generated outcomes based on the input prompt
 
