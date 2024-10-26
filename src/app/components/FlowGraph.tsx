@@ -68,6 +68,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     // Add this state at the top of the component with other states
     const [activeActionNodeId, setActiveActionNodeId] = useState<string | null>(null);
 
+    // SUBSEQUENT CALLS
     // Memoize the generate outcomes function
     const generateOutcomes = useCallback(
       async (parentX: number, parentY: number, action: string, isInitial: boolean = false) => {

@@ -165,7 +165,7 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
     }
   };
 
-  // MAIN LOGIC
+  // MAIN LOGIC - INITIAL CALL
   const progressStep = useCallback(async () => {
     if (isGeneratingRef.current) {
       console.log('Already generating outcomes, skipping...');
