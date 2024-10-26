@@ -118,38 +118,6 @@ The probabilities should sum up to 100%.
 # FUNCTIONS #
 #############
 
-# Generate possible outcomes based on a given query using Groq and EXA APIs
-@app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
-@web_endpoint(method="POST")
-def outcomes(query: Query):
-    try:
-        # Get API keys
-        GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-        EXA_API_KEY = os.getenv('EXA_API_KEY')
-
-        # EXA API call and processing
-        exa_client = Exa(api_key=EXA_API_KEY)
-        exa_data = exa_client.search(query.query)
-        exa_context, hyperlinks = process_exa_results(exa_data)
-
-        # Groq API call
-        client = Groq(api_key=GROQ_API_KEY)
-        prompt = OUTCOME_PROMPT_TEMPLATE.format(query=query.query, exa_context=exa_context)
-        groq_response = get_groq_response(client, prompt)
-
-        # Parse outcomes
-        outcomes = parse_outcomes_with_links(groq_response, hyperlinks)
-
-        if not outcomes:
-            raise ValueError("No outcomes were generated")
-
-        return OutcomesResponse(outcomes=outcomes)
-
-    except Exception as e:
-        error_msg = f"Error in outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
-        print(error_msg)
-        return JSONResponse(status_code=500, content={"detail": error_msg})
-
 # Process the results from the Exa API search
 # Extracts titles and URLs from the search results
 # Returns a formatted context string and a list of hyperlinks
@@ -225,6 +193,42 @@ def parse_outcomes_with_links(response_text: str, hyperlinks: List[str]) -> List
         ))
 
     return outcomes
+
+############
+# ENDPOINT #
+############
+
+# Generate possible outcomes based on a given query using Groq and EXA APIs
+@app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
+@web_endpoint(method="POST")
+def outcomes(query: Query):
+    try:
+        # Get API keys
+        GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+        EXA_API_KEY = os.getenv('EXA_API_KEY')
+
+        # EXA API call and processing
+        exa_client = Exa(api_key=EXA_API_KEY)
+        exa_data = exa_client.search(query.query)
+        exa_context, hyperlinks = process_exa_results(exa_data)
+
+        # Groq API call
+        client = Groq(api_key=GROQ_API_KEY)
+        prompt = OUTCOME_PROMPT_TEMPLATE.format(query=query.query, exa_context=exa_context)
+        groq_response = get_groq_response(client, prompt)
+
+        # Parse outcomes
+        outcomes = parse_outcomes_with_links(groq_response, hyperlinks)
+
+        if not outcomes:
+            raise ValueError("No outcomes were generated")
+
+        return OutcomesResponse(outcomes=outcomes)
+
+    except Exception as e:
+        error_msg = f"Error in outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
+        print(error_msg)
+        return JSONResponse(status_code=500, content={"detail": error_msg})
 
 # Initialize the FastAPI app with CORS middleware and define the API endpoint
 @app.function(image=image)

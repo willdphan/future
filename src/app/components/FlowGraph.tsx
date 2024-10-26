@@ -101,7 +101,6 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
           const data: { outcomes: Outcome[] } = await response.json();
           const totalHeight = (data.outcomes.length - 1) * VERTICAL_SPACING;
           const startY = parentY - totalHeight / 2;
-
           const newOutcomes: TreeNode[] = data.outcomes.map((outcome: Outcome, i: number) => ({
             id: `outcome-${Date.now()}-${i}`,
             title: outcome.title,
