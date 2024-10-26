@@ -184,7 +184,10 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
 
       const response = await fetch(MODAL_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Origin': 'https://future-iar4.vercel.app'
+        },
         body: JSON.stringify({ query: `${answers[0]}\n${answers[1]}` }),
         signal: abortControllerRef.current.signal,
       });
