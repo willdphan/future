@@ -22,7 +22,7 @@ import { findNodeById, getNodePath } from '@/utils/tree';
 import FullScreenPopup from './FullScreenPopup';
 import { PieGraph } from './PieGraph';
 
-// 1. Constants and utility functions
+// 1. CONSTANTS AND UTILITY FUNCTIONS
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 100;
 const INITIAL_HORIZONTAL_SPACING = 300;
@@ -48,10 +48,10 @@ const getMinMaxCoordinates = (node: TreeNode) => {
   return { minX, minY, maxX, maxY };
 };
 
-// 2. Main component
+// 2. MAIN COMPONENT
 const FlowGraph: React.FC<FlowGraphProps> = React.memo(
   ({ initialAction, showChart, onChartRendered, updateNumberOfOutcomes, updateTreeData, selectedFlowchart, zoom }) => {
-    // 3. State declarations
+    // 3. STATE DECLARATIONS
     const [treeData, setTreeData] = useState<TreeNode>({
       id: 'start',
       content: '',
@@ -67,11 +67,11 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
     // Add this state at the top of the component with other states
     const [activeActionNodeId, setActiveActionNodeId] = useState<string | null>(null);
 
-    // 4. Refs
+    // 4. REFS
     const isGeneratingRef = useRef(false);
     const hasInitializedRef = useRef(false);
 
-    // 5. Memoized functions
+    // 5. MEMOIZED FUNCTIONS
     const generateOutcomes = useCallback(
       async (parentX: number, parentY: number, action: string, isInitial: boolean = false) => {
         if (isGeneratingRef.current) {
@@ -259,7 +259,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       [treeData]
     );
 
-    // 6. Effect hooks
+    // 6. EFFECT HOOKS
     useEffect(() => {
       if (showChart && initialAction && !hasInitializedRef.current) {
         hasInitializedRef.current = true;
@@ -313,7 +313,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       }
     }, [selectedFlowchart, onChartRendered, updateNumberOfOutcomes]);
 
-    // 7. Render functions
+    // 7. RENDER FUNCTIONS
     const renderNode = (node: TreeNode, depth: number = 0, path: number[] = []): React.ReactNode => {
       if (!node) return null;
       const hasOutcomes = node.outcomes && node.outcomes.length > 0;
@@ -491,7 +491,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
       );
     };
 
-    // 8. Component logic and return statement
+    // 8. COMPONENT LOGIC AND RETURN STATEMENT
     const { minX, minY, maxX, maxY } = getMinMaxCoordinates(treeData);
     const containerWidth = maxX - minX + NODE_WIDTH + HORIZONTAL_SPACING;
     const containerHeight = maxY - minY + NODE_HEIGHT + VERTICAL_SPACING;
@@ -510,8 +510,8 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
 
     return (
       <>
-        <div className="relative h-full w-full overflow-auto bg-[#E8E4DB]">
-          <div ref={containerRef} style={containerStyle} className="relative min-h-full" key={JSON.stringify(treeData)}>
+        <div className='relative h-full w-full overflow-auto bg-[#E8E4DB]'>
+          <div ref={containerRef} style={containerStyle} className='relative min-h-full' key={JSON.stringify(treeData)}>
             {renderNode(treeData)}
           </div>
           {popupNode && <FullScreenPopup node={popupNode} onClose={() => setPopupNode(null)} />}
