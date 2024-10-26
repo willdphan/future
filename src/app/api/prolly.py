@@ -230,7 +230,6 @@ def outcomes(query: Query):
         print(error_msg)
         return JSONResponse(status_code=500, content={"detail": error_msg})
 
-# Initialize the FastAPI app with CORS middleware and define the API endpoint
 @app.function(image=image)
 @web_endpoint()
 def fastapi_app():
@@ -238,7 +237,7 @@ def fastapi_app():
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://future-iar4.vercel.app"],
+        allow_origins=["https://future-iar4.vercel.app", "http://localhost:3000", "http://localhost:3001"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

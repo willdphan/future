@@ -32,7 +32,7 @@ const PLACEHOLDERS = [
   'Describe your current situation or environment. This context helps us tailor our assistance.',
   "Given your situation, what's the first step or course of action you plan to take?",
 ];
-const API_URL = 'https://willdphan--fastapi-groq-api-generate-outcomes.modal.run';
+const MODAL_API_URL = 'https://willdphan--fastapi-groq-api-generate-outcomes.modal.run/outcomes';
 
 const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
   const [step, setStep] = useState(0);
@@ -182,7 +182,7 @@ const FlowChart: React.FC<FlowChartPageProps> = React.memo(({ user }) => {
       abortControllerRef.current.abort();
       abortControllerRef.current = new AbortController();
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(MODAL_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: `${answers[0]}\n${answers[1]}` }),
