@@ -86,7 +86,7 @@ const FlowGraph: React.FC<FlowGraphProps> = React.memo(
 
         try {
           // EDIT API LINK HERE!
-          const response = await fetch('https://willdphan--fastapi-groq-api-generate-outcomes.modal.run', {
+          const response = await fetch('https://willdphan--fastapi-groq-api-outcomes.modal.run', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

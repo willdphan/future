@@ -17,7 +17,7 @@ This project is an AI-powered application that generates outcomes based on user 
 1. `src/app/api/prolly.py`: The main application script containing:
 
    - Configuration for the Groq and Exa API client
-   - The `generate_outcomes` function that processes user input and generates outcomes
+   - The `outcomes` function that processes user input and generates outcomes
    - FastAPI app setup with CORS middleware
    - Endpoint definition for the `/generate-outcomes` route
 

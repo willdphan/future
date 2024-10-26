@@ -208,7 +208,7 @@ class OutcomesResponse(BaseModel):
     sources: List[dict]
 
 @app.post("/generate-outcomes", response_model=OutcomesResponse)
-async def generate_outcomes(query: Query):
+async def outcomes(query: Query):
         # Log the incoming query
     print(f"Received query: {query.query}")
     # Set up LLM

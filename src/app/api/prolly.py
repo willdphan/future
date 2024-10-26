@@ -121,7 +121,7 @@ The probabilities should sum up to 100%.
 # Generate possible outcomes based on a given query using Groq and EXA APIs
 @app.function(image=image, secrets=[modal.Secret.from_name("my-api-keys")])
 @web_endpoint(method="POST")
-def generate_outcomes(query: Query):
+def outcomes(query: Query):
     try:
         # Get API keys
         GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -146,7 +146,7 @@ def generate_outcomes(query: Query):
         return OutcomesResponse(outcomes=outcomes)
 
     except Exception as e:
-        error_msg = f"Error in generate_outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
+        error_msg = f"Error in outcomes: {str(e)}\nTraceback: {traceback.format_exc()}"
         print(error_msg)
         return JSONResponse(status_code=500, content={"detail": error_msg})
 
@@ -240,7 +240,7 @@ def fastapi_app():
         allow_headers=["*"],
     )
 
-    app.post("/generate-outcomes", response_model=OutcomesResponse)(generate_outcomes.apply)
+    app.post("/outcomes", response_model=OutcomesResponse)(outcomes.apply)
 
     return app
 

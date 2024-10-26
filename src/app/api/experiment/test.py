@@ -22,7 +22,7 @@ class Action(BaseModel):
     action: str
 
 @app.post("/api/generate-outcomes")
-async def generate_outcomes(action: Action):
+async def outcomes(action: Action):
     try:
         completion = client.chat.completions.create(
             model="gpt-4",
